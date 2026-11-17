@@ -30,3 +30,6 @@ The format is [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The proj
 - `signed_url` raises `ArgumentError` for `format: "jpeg"` with `transparent`. The instance returns HTTP 400 for this pair.
 - The test fixtures use the response shapes of the API at commit `4d008a5`. The screenshot list items have `image_url`. The snaps have `width` and `height`. The batches have all the progress fields.
 - The README describes the 403 of `POST /v1/snaps`, the 409 codes, the `internal_error` code of a 500, and the screenshot id fields.
+- A media record has nine fields: `id`, `uuid`, `name`, `file_name`, `mime_type`, `size`, `original_url`, `src` and `created_at`. The API no longer sends `model_type`, `collection_name`, `preview_url`, `updated_at` or the other internal fields. A call to a removed field as a method raises `NoMethodError`, and `record[:field]` gives `nil`. The media fixtures use the new shape.
+- The `image_url` of a screenshot is `nil` when the screenshot has no image. The API sent an empty string before. The README tells you to check for `nil`.
+- A 500 from `batches.create` raises `ServerError` with the code `internal_error`, the same as `snaps.create`.

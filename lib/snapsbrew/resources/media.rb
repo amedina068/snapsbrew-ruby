@@ -1,5 +1,7 @@
 module Snapsbrew
   # The image library of your account. Use a media src as an image_url variant.
+  # A media record has the fields id, uuid, name, file_name, mime_type, size,
+  # original_url, src and created_at, and no other field.
   class Media < Resource
     include Enumerable
 

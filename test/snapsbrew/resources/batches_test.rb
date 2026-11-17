@@ -47,6 +47,20 @@ class Snapsbrew::BatchesTest < Snapsbrew::TestCase
     assert_equal "idempotency_key_belongs_to_snap", error.code
   end
 
+  def test_create_server_error_has_the_internal_error_code
+    message = "The server could not create the batch. Try again later. If the error continues, " \
+      "contact support and give the X-Request-Uuid header of this response."
+    stub = stub_api(:post, "/v1/snaps/batches")
+      .to_return(json({ message:, code: "internal_error" }, status: 500, headers: { "X-Request-Uuid" => "req-batch" }))
+
+    error = assert_raises(Snapsbrew::ServerError) { client.batches.create(template: "t1", items: [ {} ]) }
+
+    assert_equal message, error.message
+    assert_equal "internal_error", error.code
+    assert_equal "req-batch", error.request_id
+    assert_requested stub, times: 1
+  end
+
   def test_find
     stub_api(:get, "/v1/snaps/batches/#{ID}").to_return(json({
       uuid: ID, title: "October launch", status: "completed", total_rows: 2, processed_rows: 2,

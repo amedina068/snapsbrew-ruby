@@ -188,9 +188,9 @@ Snapsbrew.tags.create(name: "Launch")
 Snapsbrew.tags.sync(template: id, tag_ids: [ 1, 2 ])
 ```
 
-A screenshot from `create` and `find` has its id in `id`. A screenshot from `each` and `list` has the same value in `uuid`.
+A screenshot from `create` and `find` has its id in `id`. A screenshot from `each` and `list` has the same value in `uuid`. The `image_url` of a screenshot is `nil` when the screenshot has no image.
 
-Use the `src` of a media image as an `image_url` variant.
+Use the `src` of a media image as an `image_url` variant. A media image has these fields and no other field: `id`, `uuid`, `name`, `file_name`, `mime_type`, `size`, `original_url`, `src` and `created_at`.
 
 ### Guides
 
@@ -290,7 +290,7 @@ Each error is a `Snapsbrew::Error`.
 | `Snapsbrew::ConflictError`       | 409. `code` gives the cause. See [Conflicts](#conflicts). |
 | `Snapsbrew::ValidationError`     | 422. `errors` has the field errors. A `template_id` that does not exist in your company is a 422, not a 404. |
 | `Snapsbrew::RateLimitError`      | 429. `retry_after` has the seconds to wait. `limit` has the requests that the endpoint allows in one minute. |
-| `Snapsbrew::ServerError`         | 5xx. If `snaps.create` fails on the server, `code` is `internal_error`. |
+| `Snapsbrew::ServerError`         | 5xx. If `snaps.create` or `batches.create` fails on the server, `code` is `internal_error`. |
 | `Snapsbrew::ApiError`            | Each other status. It is also the parent of the HTTP errors above. |
 
 Each `ApiError` has `status`, `body`, `message`, `code` and `request_id`. The `code` is the `code` field of the body, or `nil`. The `request_id` is the `X-Request-Uuid` header. Give it when you ask for support.

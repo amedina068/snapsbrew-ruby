@@ -1,4 +1,6 @@
 module Snapsbrew
+  # Images of web pages. The image_url of a screenshot is nil when the
+  # screenshot has no image.
   class Screenshots < Resource
     include Enumerable
 

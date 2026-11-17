@@ -3,6 +3,8 @@ require "tempfile"
 
 class Snapsbrew::MediaTest < Snapsbrew::TestCase
   PNG = "\x89PNG\r\n\x1A\nimage-bytes".b
+  # POST /v1/media and each item of GET /v1/media send these fields and no other field.
+  MEDIA_FIELDS = %w[ id uuid name file_name mime_type size original_url src created_at ].freeze
 
   def test_upload_a_path
     Tempfile.create([ "logo", ".png" ]) do |file|
@@ -25,7 +27,7 @@ class Snapsbrew::MediaTest < Snapsbrew::TestCase
     end.new("logo.png", "image/png", StringIO.new(PNG))
 
     stub = stub_api(:post, "/v1/media").with { |request| multipart?(request, "logo.png") && request.body.include?("image/png") }
-      .to_return(json(id: 12))
+      .to_return(json(media(12)))
 
     assert_equal 12, client.media.upload(upload).id
     assert_requested stub
@@ -54,6 +56,16 @@ class Snapsbrew::MediaTest < Snapsbrew::TestCase
     assert_equal 1, page.meta.current_page
     assert_equal 1, page.meta.total
     refute page.next_page?
+  end
+
+  def test_a_media_record_has_the_nine_fields_of_the_api
+    stub_api(:post, "/v1/media").to_return(json(media(12)))
+
+    image = client.media.upload(StringIO.new(PNG))
+
+    assert_equal MEDIA_FIELDS, image.to_h.keys
+    refute_respond_to image, :model_type
+    assert_nil image[:collection_name]
   end
 
   private
