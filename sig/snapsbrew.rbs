@@ -1,0 +1,207 @@
+module Snapsbrew
+  VERSION: String
+
+  type variants = Hash[Symbol | String, untyped] | Array[Hash[Symbol | String, untyped]]
+
+  def self.configure: () { (Configuration) -> void } -> void
+  def self.config: () -> Configuration
+  def self.client: () -> Client
+  def self.reset!: () -> void
+  def self.account: () -> Record
+  def self.guides: () -> Guides
+  def self.templates: () -> Templates
+  def self.snaps: () -> Snaps
+  def self.batches: () -> Batches
+  def self.screenshots: () -> Screenshots
+  def self.media: () -> Media
+  def self.tags: () -> Tags
+  def self.signed_url: (template: String, ?variants: variants?, ?format: String?, ?transparent: bool?, **untyped) -> String
+
+  class Configuration
+    attr_writer url: String?
+    attr_writer token: String?
+    attr_writer signing_key: String?
+    attr_accessor timeout: Numeric
+    attr_accessor max_retries: Integer
+
+    def initialize: () -> void
+    def url: () -> String?
+    def token: () -> String?
+    def signing_key: () -> String?
+    def merge!: (Hash[Symbol | String, untyped]? settings) -> self
+    def to_h: () -> Hash[Symbol, untyped]
+  end
+
+  class Client
+    BEFORE_SEND: Array[singleton(Exception)]
+    AFTER_SEND: Array[singleton(Exception)]
+    BASE_DELAY: Float
+    MAX_DELAY: Integer
+    MAX_RETRY_AFTER: Integer
+
+    attr_reader url: String
+    attr_reader timeout: Numeric
+    attr_reader max_retries: Integer
+
+    def initialize: (?url: String?, ?token: String?, ?signing_key: String?, ?timeout: Numeric, ?max_retries: Integer) -> void
+    def account: () -> Record
+    def guides: () -> Guides
+    def templates: () -> Templates
+    def snaps: () -> Snaps
+    def batches: () -> Batches
+    def screenshots: () -> Screenshots
+    def media: () -> Media
+    def tags: () -> Tags
+    def signed_url: (template: String, ?variants: variants?, ?format: String?, ?transparent: bool?, **untyped) -> String
+    def request: (Symbol method, String path, ?query: Hash[Symbol | String, untyped]?, ?json: untyped, ?form: Hash[String, untyped]?, ?idempotent: bool) -> untyped
+  end
+
+  class SignedUrl
+    PATH: String
+
+    def self.canonical: (Hash[Symbol | String, String] params) -> String
+    def self.sign: (Hash[Symbol | String, String] params, String key) -> String
+    def initialize: (url: String?, key: String?) -> void
+    def build: (template: String, ?variants: variants?, ?format: String?, ?transparent: bool?, **untyped) -> String
+  end
+
+  module Variants
+    URL: Regexp
+
+    def self.normalize: (variants? variants) -> Array[Hash[Symbol | String, untyped]]?
+    def self.merge: (variants? variants, Hash[Symbol, untyped] layers) -> Array[Hash[Symbol | String, untyped]]?
+  end
+
+  class Record
+    def self.wrap: (untyped value) -> untyped
+    def initialize: (Hash[Symbol | String, untyped] attributes) -> void
+    def []: (Symbol | String key) -> untyped
+    def key?: (Symbol | String key) -> bool
+    def to_h: () -> Hash[String, untyped]
+  end
+
+  class Page
+    include Enumerable[Record]
+
+    attr_reader records: Array[Record]
+    attr_reader meta: Record
+
+    def initialize: (Array[untyped]? records, Hash[String, untyped]? meta) ?{ () -> Page? } -> void
+    def each: () { (Record) -> void } -> Array[Record]
+    def next_page?: () -> bool
+    def next_page: () -> Page?
+    def each_record: () { (Record) -> void } -> void
+                   | () -> Enumerator[Record, void]
+  end
+
+  class Resource
+    def initialize: (Client client) -> void
+  end
+
+  class Guides < Resource
+    def design: () -> Record
+    def layers: () -> Record
+    def variant_properties: () -> Array[Record]
+    def editor_document: () -> Record
+    def platforms: () -> Array[Record]
+    def purposes: () -> Array[Record]
+    def platform: (Symbol | String key) -> Record
+    def purpose: (Symbol | String key) -> Record
+  end
+
+  class Templates < Resource
+    include Enumerable[Record]
+
+    def list: (?cursor: String?) -> Page
+    def each: () { (Record) -> void } -> void
+    def find: (String uuid) -> Record
+    def sizes: () -> Array[Record]
+    def create: (title: String, ?size: String?, ?width: Integer?, ?height: Integer?, ?layers: Array[untyped]?) -> Record
+    def update: (String uuid, title: String, ?size: String?, ?width: Integer?, ?height: Integer?, ?layers: Array[untyped]?) -> Record
+    def destroy: (String uuid) -> true
+    def publish: (String uuid) -> Record
+  end
+
+  class Snaps < Resource
+    def create: (?template: String?, ?collection: String?, ?variants: variants?, ?type: String?, ?format: String?,
+                 ?transparent: bool?, ?async: bool?, ?webhook_url: String?, ?idempotency_key: String?) -> (Record | Array[Record])
+    def preview: (template: String, ?variants: variants?) -> String
+  end
+
+  class Batches < Resource
+    def create: (template: String, items: Array[Hash[Symbol | String, untyped]], ?title: String?, ?webhook_url: String?,
+                 ?type: String?, ?format: String?, ?transparent: bool?, ?idempotency_key: String?) -> Record
+    def find: (String uuid) -> Record
+    def cancel: (String uuid) -> Record
+  end
+
+  class Screenshots < Resource
+    include Enumerable[Record]
+
+    def create: (url: String, ?width: Integer?, ?height: Integer?) -> Record
+    def list: (?cursor: String?) -> Page
+    def each: () { (Record) -> void } -> void
+    def find: (String uuid) -> Record
+  end
+
+  class Media < Resource
+    include Enumerable[Record]
+
+    def upload: (untyped file) -> Record
+    def list: (?page: Integer?) -> Page
+    def each: () { (Record) -> void } -> void
+  end
+
+  class Tags < Resource
+    def list: (?search: String?) -> Array[Record]
+    def create: (name: String) -> Record
+    def sync: (template: String, tag_ids: Array[Integer | String]) -> Array[Record]
+  end
+
+  class Error < StandardError
+  end
+
+  class ConfigurationError < Error
+  end
+
+  class ConnectionError < Error
+  end
+
+  class ApiError < Error
+    attr_reader status: Integer
+    attr_reader body: untyped
+    attr_reader request_id: String?
+
+    def self.for: (Net::HTTPResponse response) -> ApiError
+    def self.class_for: (Integer status) -> singleton(ApiError)
+    def initialize: (Net::HTTPResponse response, untyped body) -> void
+    def retry_after: () -> Integer?
+  end
+
+  class AuthenticationError < ApiError
+  end
+
+  class AuthorizationError < ApiError
+  end
+
+  class NotFoundError < ApiError
+  end
+
+  class ConflictError < ApiError
+  end
+
+  class RateLimitError < ApiError
+  end
+
+  class ServerError < ApiError
+  end
+
+  class ValidationError < ApiError
+    def errors: () -> Hash[String, Array[String]]
+  end
+
+  module Helper
+    def snapsbrew_image_tag: (template: String, alt: String, ?html: Hash[Symbol, untyped], **untyped) -> String
+    def snapsbrew_og_image_tag: (template: String, **untyped) -> String
+  end
+end

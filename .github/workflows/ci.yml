@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Ruby ${{ matrix.ruby }}, Rails ${{ matrix.rails }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: [ "3.2", "3.3", "3.4" ]
+        rails: [ "7.2", "8.0", "8.1" ]
+    env:
+      RAILS_VERSION: "~> ${{ matrix.rails }}.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Unit tests
+        run: bin/rake test
+      - name: Rails tests
+        run: bin/rake test:rails
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - name: RuboCop
+        run: bin/rubocop
+      - name: RBS signatures
+        run: bin/rake rbs

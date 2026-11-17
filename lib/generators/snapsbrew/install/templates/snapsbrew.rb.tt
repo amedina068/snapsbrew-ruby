@@ -1,0 +1,11 @@
+# Snapsbrew reads url, token and signing_key from Rails.application.credentials.snapsbrew.
+# Without credentials, it reads SNAPSBREW_URL, SNAPSBREW_TOKEN and SNAPSBREW_SIGNING_KEY.
+Snapsbrew.configure do |config|
+  # config.url = "https://snaps.example.com"
+
+  # The seconds to wait for a response. A synchronous render can take some seconds.
+  # config.timeout = 60
+
+  # The retries after a 429, a 5xx on an idempotent request, or a connection error.
+  # config.max_retries = 2
+end

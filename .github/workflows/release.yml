@@ -1,0 +1,31 @@
+name: Release
+
+# This workflow runs only by hand. It builds the gem and keeps it as an
+# artifact. It does not publish the gem.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - run: bin/rake test test:rails
+      - run: gem build snapsbrew.gemspec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snapsbrew-gem
+          path: "*.gem"
+
+      # To publish later, add the repository secret RUBYGEMS_API_KEY and enable this step.
+      # - name: Publish to RubyGems
+      #   run: gem push *.gem
+      #   env:
+      #     GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}

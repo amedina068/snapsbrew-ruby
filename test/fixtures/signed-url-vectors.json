@@ -1,0 +1,40 @@
+{
+    "algorithm": "HMAC-SHA256 hex over the query parameters except \"signature\", sorted by key (byte order), joined as key=value with \"&\". Values are the raw decoded values, not URL-encoded. \"variants\" is standard base64 (with + / =) of the JSON array.",
+    "base_url": "https://snapsbrew.example/signed-url/image.jpg",
+    "key": "test-signing-key-0123456789",
+    "cases": [
+        {
+            "name": "template only",
+            "params": {
+                "template_id": "044ec825-ee2f-4d06-bb77-98663e27f529"
+            },
+            "variants_json": null,
+            "canonical_string": "template_id=044ec825-ee2f-4d06-bb77-98663e27f529",
+            "signature": "24799225d02c05c4d405a30a1896fafbf06a628c31ae68521c45de4c50b390a3",
+            "url": "https://snapsbrew.example/signed-url/image.jpg?template_id=044ec825-ee2f-4d06-bb77-98663e27f529&signature=24799225d02c05c4d405a30a1896fafbf06a628c31ae68521c45de4c50b390a3"
+        },
+        {
+            "name": "text and image variants",
+            "params": {
+                "template_id": "044ec825-ee2f-4d06-bb77-98663e27f529",
+                "variants": "W3sibGF5ZXIiOiJ0aXRsZSIsInRleHQiOiJEYXJrIEF2ZW5nZXJzIn0seyJsYXllciI6ImNvdmVyIiwiaW1hZ2VfdXJsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9hL2IuanBnP3g9MSZ5PTIifV0="
+            },
+            "variants_json": "[{\"layer\":\"title\",\"text\":\"Dark Avengers\"},{\"layer\":\"cover\",\"image_url\":\"https://example.com/a/b.jpg?x=1&y=2\"}]",
+            "canonical_string": "template_id=044ec825-ee2f-4d06-bb77-98663e27f529&variants=W3sibGF5ZXIiOiJ0aXRsZSIsInRleHQiOiJEYXJrIEF2ZW5nZXJzIn0seyJsYXllciI6ImNvdmVyIiwiaW1hZ2VfdXJsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9hL2IuanBnP3g9MSZ5PTIifV0=",
+            "signature": "bff2011c8b8a10812f9c4b7432245d000a94f2bfcb50c04a62a369f1ec545e45",
+            "url": "https://snapsbrew.example/signed-url/image.jpg?template_id=044ec825-ee2f-4d06-bb77-98663e27f529&variants=W3sibGF5ZXIiOiJ0aXRsZSIsInRleHQiOiJEYXJrIEF2ZW5nZXJzIn0seyJsYXllciI6ImNvdmVyIiwiaW1hZ2VfdXJsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9hL2IuanBnP3g9MSZ5PTIifV0%3D&signature=bff2011c8b8a10812f9c4b7432245d000a94f2bfcb50c04a62a369f1ec545e45"
+        },
+        {
+            "name": "unicode, hidden layer and format",
+            "params": {
+                "template_id": "044ec825-ee2f-4d06-bb77-98663e27f529",
+                "format": "jpg",
+                "variants": "W3sibGF5ZXIiOiJoZWFkbGluZSIsInRleHQiOiLCv0VzdGUgc8OtIGVzIHR1IEhhd2tleWU/IPCfj7kifSx7ImxheWVyIjoiYmFkZ2UiLCJoaWRkZW4iOnRydWV9LHsibGF5ZXIiOiJiZyIsImJhY2tncm91bmRfY29sb3IiOiIjZjA1NzNmIn1d"
+            },
+            "variants_json": "[{\"layer\":\"headline\",\"text\":\"¿Este sí es tu Hawkeye? 🏹\"},{\"layer\":\"badge\",\"hidden\":true},{\"layer\":\"bg\",\"background_color\":\"#f0573f\"}]",
+            "canonical_string": "format=jpg&template_id=044ec825-ee2f-4d06-bb77-98663e27f529&variants=W3sibGF5ZXIiOiJoZWFkbGluZSIsInRleHQiOiLCv0VzdGUgc8OtIGVzIHR1IEhhd2tleWU/IPCfj7kifSx7ImxheWVyIjoiYmFkZ2UiLCJoaWRkZW4iOnRydWV9LHsibGF5ZXIiOiJiZyIsImJhY2tncm91bmRfY29sb3IiOiIjZjA1NzNmIn1d",
+            "signature": "b5b47072dae2cfe45f03ea4e6f6f453e48a43be381fbf9cbf0adf1efd748713d",
+            "url": "https://snapsbrew.example/signed-url/image.jpg?template_id=044ec825-ee2f-4d06-bb77-98663e27f529&format=jpg&variants=W3sibGF5ZXIiOiJoZWFkbGluZSIsInRleHQiOiLCv0VzdGUgc8OtIGVzIHR1IEhhd2tleWU%2FIPCfj7kifSx7ImxheWVyIjoiYmFkZ2UiLCJoaWRkZW4iOnRydWV9LHsibGF5ZXIiOiJiZyIsImJhY2tncm91bmRfY29sb3IiOiIjZjA1NzNmIn1d&signature=b5b47072dae2cfe45f03ea4e6f6f453e48a43be381fbf9cbf0adf1efd748713d"
+        }
+    ]
+}
