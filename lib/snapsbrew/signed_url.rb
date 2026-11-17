@@ -6,6 +6,9 @@ module Snapsbrew
   class SignedUrl
     PATH = "/signed-url/image.jpg"
 
+    # The values that the instance reads as true, with PHP FILTER_VALIDATE_BOOLEAN.
+    TRUE_VALUES = %w[ 1 true on yes ].freeze
+
     def self.canonical(params)
       params.reject { |key, _| key.to_s == "signature" }
         .sort_by { |key, _| key.to_s.b }
@@ -25,7 +28,13 @@ module Snapsbrew
       @key = key
     end
 
+    # The instance returns HTTP 400 for a transparent JPEG, and an <img> does not
+    # show the error. So the builder refuses this pair.
     def build(template:, variants: nil, format: nil, transparent: nil, **layers)
+      if format.to_s == "jpeg" && TRUE_VALUES.include?(transparent.to_s.downcase)
+        raise ArgumentError, "A JPEG cannot be transparent. Use the png or webp format, or remove transparent."
+      end
+
       variants = Variants.merge(variants, layers)
 
       params = { "template_id" => template.to_s }

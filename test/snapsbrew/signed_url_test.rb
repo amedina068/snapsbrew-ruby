@@ -29,6 +29,17 @@ class Snapsbrew::SignedUrlTest < Snapsbrew::TestCase
     assert_equal "B=2&a=1&b=3", Snapsbrew::SignedUrl.canonical("b" => "3", "signature" => "x", "a" => "1", "B" => "2")
   end
 
+  def test_a_transparent_jpeg_is_an_error
+    [ true, "1", "true" ].each do |transparent|
+      assert_raises(ArgumentError) { signer.build(template: "t1", format: "jpeg", transparent:) }
+    end
+  end
+
+  def test_a_transparent_png_and_an_opaque_jpeg_are_valid
+    assert_includes signer.build(template: "t1", format: "png", transparent: true), "transparent=true"
+    assert_includes signer.build(template: "t1", format: "jpeg", transparent: false), "transparent=false"
+  end
+
   def test_keyword_layers_build_the_same_url_as_the_array_form
     array = signer.build(template: "t1", variants: [ { layer: "title", text: "Dark Avengers" } ])
 

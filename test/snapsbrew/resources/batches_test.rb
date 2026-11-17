@@ -11,7 +11,10 @@ class Snapsbrew::BatchesTest < Snapsbrew::TestCase
         { variants: [ { layer: "title", text: "World" } ] }
       ],
       title: "October launch"
-    }).to_return(json({ uuid: ID, status: "processing", total_rows: 2 }, status: 202))
+    }).to_return(json({
+      uuid: ID, title: "October launch", status: "pending", total_rows: 2, processed_rows: 0,
+      completed: 0, pending: 2, failed: 0, canceled: 0, status_url: "#{URL}/api/v1/snaps/batches/#{ID}"
+    }, status: 202))
 
     batch = client.batches.create(template: "t1", title: "October launch", items: [
       { identifier: "row-1", variants: { title: "Hello" } },
@@ -19,6 +22,7 @@ class Snapsbrew::BatchesTest < Snapsbrew::TestCase
     ])
 
     assert_equal ID, batch.uuid
+    assert_equal 2, batch.pending
     assert_requested stub
   end
 
@@ -34,15 +38,23 @@ class Snapsbrew::BatchesTest < Snapsbrew::TestCase
   end
 
   def test_create_conflict
-    stub_api(:post, "/v1/snaps/batches").to_return(json({ message: "This idempotency_key already belongs to a single snap." }, status: 409))
+    stub_api(:post, "/v1/snaps/batches").to_return(json({
+      message: "This idempotency_key already belongs to a single snap. Use a new key for a batch.", code: "idempotency_key_belongs_to_snap"
+    }, status: 409))
 
-    assert_raises(Snapsbrew::ConflictError) { client.batches.create(template: "t1", items: [ {} ], idempotency_key: "k") }
+    error = assert_raises(Snapsbrew::ConflictError) { client.batches.create(template: "t1", items: [ {} ], idempotency_key: "k") }
+
+    assert_equal "idempotency_key_belongs_to_snap", error.code
   end
 
   def test_find
     stub_api(:get, "/v1/snaps/batches/#{ID}").to_return(json({
-      uuid: ID, status: "completed", completed: 1, failed: 1,
-      items: [ { id: "9f1c2d3e", status: "completed", media_url: "https://snaps.test/a.png" }, { id: "4b8a7c6d", status: "failed", media_url: nil } ]
+      uuid: ID, title: "October launch", status: "completed", total_rows: 2, processed_rows: 2,
+      completed: 1, pending: 0, failed: 1, canceled: 0, status_url: "#{URL}/api/v1/snaps/batches/#{ID}",
+      items: [
+        { id: "9f1c2d3e", identifier: "row-1", status: "completed", media_url: "https://snaps.test/a.png", last_error: nil },
+        { id: "4b8a7c6d", identifier: "item_2", status: "failed", media_url: nil, last_error: "The image could not be loaded." }
+      ]
     }))
 
     batch = client.batches.find(ID)

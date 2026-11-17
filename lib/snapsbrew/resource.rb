@@ -20,14 +20,16 @@ module Snapsbrew
         URI.encode_uri_component(segment.to_s)
       end
 
-      # A cursor list: GET /v1/templates, GET /v1/screenshots.
-      def cursor_page(path, cursor: nil)
+      # A cursor list: GET /v1/templates, GET /v1/screenshots. A block can
+      # change each record before the page wraps it.
+      def cursor_page(path, cursor: nil, &prepare)
         body = get(path, query: { cursor: }.compact)
         next_cursor = body.dig("meta", "next_cursor")
 
-        next_page = -> { cursor_page(path, cursor: next_cursor) } if next_cursor
+        next_page = -> { cursor_page(path, cursor: next_cursor, &prepare) } if next_cursor
 
-        Page.new(body["data"], body["meta"], &next_page)
+        records = prepare ? body["data"].map(&prepare) : body["data"]
+        Page.new(records, body["meta"], &next_page)
       end
   end
 end

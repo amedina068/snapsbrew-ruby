@@ -55,6 +55,69 @@ class Snapsbrew::RetriesTest < Snapsbrew::TestCase
     assert_equal [ 7 ], client.pauses
   end
 
+  def test_retries_a_snap_with_an_idempotency_key_while_the_key_is_in_progress
+    stub = stub_api(:post, "/v1/snaps")
+      .to_return(json({ message: "A request with this idempotency_key is already in progress.", code: "idempotency_key_in_progress" }, status: 409))
+      .then.to_return(json({ id: "s1" }, status: 201, headers: { "X-Idempotent-Replay" => "true" }))
+    client = client()
+
+    assert_equal "s1", client.snaps.create(template: "t1", idempotency_key: "order-1").id
+    assert_requested stub, times: 2
+    assert_operator client.pauses.first, :<=, 0.5
+  end
+
+  def test_retries_a_batch_while_the_key_is_in_progress
+    stub = stub_api(:post, "/v1/snaps/batches")
+      .to_return(json({ message: "In progress.", code: "idempotency_key_in_progress" }, status: 409))
+      .then.to_return(json({ uuid: "b1", status: "pending" }, status: 202))
+
+    assert_equal "b1", client.batches.create(template: "t1", items: [ {} ], idempotency_key: "order-1").uuid
+    assert_requested stub, times: 2
+  end
+
+  def test_stops_after_max_retries_while_the_key_is_in_progress
+    stub = stub_api(:post, "/v1/snaps").to_return(json({ code: "idempotency_key_in_progress" }, status: 409))
+
+    error = assert_raises(Snapsbrew::ConflictError) { client(max_retries: 2).snaps.create(template: "t1", idempotency_key: "k") }
+
+    assert error.in_progress?
+    assert_requested stub, times: 3
+  end
+
+  def test_never_retries_a_key_that_belongs_to_a_batch
+    stub = stub_api(:post, "/v1/snaps")
+      .to_return(json({ message: "This idempotency_key already belongs to a batch.", code: "idempotency_key_belongs_to_batch" }, status: 409))
+
+    error = assert_raises(Snapsbrew::ConflictError) { client.snaps.create(template: "t1", idempotency_key: "k") }
+
+    assert_equal "idempotency_key_belongs_to_batch", error.code
+    assert_requested stub, times: 1
+  end
+
+  def test_never_retries_a_key_that_belongs_to_a_snap
+    stub = stub_api(:post, "/v1/snaps/batches")
+      .to_return(json({ message: "This idempotency_key already belongs to a single snap.", code: "idempotency_key_belongs_to_snap" }, status: 409))
+
+    error = assert_raises(Snapsbrew::ConflictError) { client.batches.create(template: "t1", items: [ {} ], idempotency_key: "k") }
+
+    assert_equal "idempotency_key_belongs_to_snap", error.code
+    assert_requested stub, times: 1
+  end
+
+  def test_never_retries_a_conflict_without_an_idempotency_key
+    stub = stub_api(:post, "/v1/snaps").to_return(json({ code: "idempotency_key_in_progress" }, status: 409))
+
+    assert_raises(Snapsbrew::ConflictError) { client.snaps.create(template: "t1") }
+    assert_requested stub, times: 1
+  end
+
+  def test_never_retries_a_snap_after_an_internal_error
+    stub = stub_api(:post, "/v1/snaps").to_return(json({ message: "The server could not create the snap.", code: "internal_error" }, status: 500))
+
+    assert_raises(Snapsbrew::ServerError) { client.snaps.create(template: "t1") }
+    assert_requested stub, times: 1
+  end
+
   def test_does_not_wait_for_a_long_retry_after
     stub = stub_api(:get, "/v1/auth").to_return(json({}, status: 429, headers: { "Retry-After" => "3600" }))
 

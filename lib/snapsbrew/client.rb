@@ -46,7 +46,9 @@ module Snapsbrew
     #
     # Retries a 429 and a connection error that happened before the request
     # reached the server. Retries a 5xx and a later connection error only when
-    # the request is idempotent.
+    # the request is idempotent. Retries a 409 with the code
+    # idempotency_key_in_progress for an idempotent request. Only a request
+    # with an idempotency key gets this code.
     def request(method, path, query: nil, json: nil, form: nil, idempotent: method == :get)
       attempt = 0
 
@@ -56,7 +58,7 @@ module Snapsbrew
         raise ApiError.for(response) unless response.is_a?(Net::HTTPSuccess)
 
         parse(response)
-      rescue RateLimitError, ServerError => error
+      rescue RateLimitError, ServerError, ConflictError => error
         raise unless attempt <= max_retries && retryable?(error, idempotent)
 
         pause delay(attempt, error.retry_after)
@@ -127,6 +129,7 @@ module Snapsbrew
         case error
         when RateLimitError then error.retry_after.nil? || error.retry_after <= MAX_RETRY_AFTER
         when ServerError    then idempotent
+        when ConflictError  then idempotent && error.in_progress?
         end
       end
 

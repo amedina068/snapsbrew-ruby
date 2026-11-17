@@ -7,11 +7,17 @@ class Snapsbrew::SnapsTest < Snapsbrew::TestCase
     stub = stub_api(:post, "/v1/snaps").with(body: {
       template_id: ID,
       variants: [ { layer: "title", text: "Hello" }, { layer: "cover", image_url: "https://example.com/a.jpg" } ]
-    }).to_return(json({ id: "9f1c2d3e", status: "completed", media_url: "https://snaps.test/storage/snaps/9f1c2d3e.png" }, status: 201))
+    }).to_return(json({
+      id: "9f1c2d3e", media_url: "https://snaps.test/storage/snaps/9f1c2d3e.png", width: 1200, height: 630, type: "image",
+      status: "completed", is_async: false, webhook_url: nil, completed_at: "2026-05-01T12:00:05.000000Z", last_error: nil,
+      variants: [ { layer: "title", text: "Hello" }, { layer: "cover", image_url: "https://example.com/a.jpg" } ],
+      template_id: ID, template_title: "Movie review", created_at: "2026-05-01T12:00:00.000000Z"
+    }, status: 201))
 
     snap = client.snaps.create(template: ID, variants: { title: "Hello", cover: "https://example.com/a.jpg" })
 
     assert_equal "https://snaps.test/storage/snaps/9f1c2d3e.png", snap.media_url
+    assert_equal [ 1200, 630 ], [ snap.width, snap.height ]
     assert_requested stub
   end
 

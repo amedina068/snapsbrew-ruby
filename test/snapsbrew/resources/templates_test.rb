@@ -5,7 +5,8 @@ class Snapsbrew::TemplatesTest < Snapsbrew::TestCase
 
   def test_list
     stub_api(:get, "/v1/templates").to_return(json(
-      data: [ { uuid: ID, title: "Template 1", layers: [ { layer: "review_title", type: "text" } ] } ],
+      data: [ { uuid: ID, title: "Template 1", width: 1200, height: 630, created_at: "2026-05-01T12:00:00.000000Z",
+                layers: [ { layer: "review_title", available_modifications: { text: "The worst Time-Travel movie ever made" } } ] } ],
       meta: { previous_cursor: nil, next_cursor: nil }
     ))
 
@@ -13,6 +14,7 @@ class Snapsbrew::TemplatesTest < Snapsbrew::TestCase
 
     assert_equal [ "Template 1" ], page.map(&:title)
     assert_equal "review_title", page.first.layers.first.layer
+    assert_equal "The worst Time-Travel movie ever made", page.first.layers.first.available_modifications.text
     refute page.next_page?
     assert_nil page.next_page
   end
@@ -29,12 +31,28 @@ class Snapsbrew::TemplatesTest < Snapsbrew::TestCase
   end
 
   def test_find
-    stub_api(:get, "/v1/templates/#{ID}").to_return(json(data: { uuid: ID, published_version: 2, has_unpublished_edits: true }))
+    stub_api(:get, "/v1/templates/#{ID}").to_return(json(data: {
+      uuid: ID, title: "Movie review", size: "open_graph", width: 1200, height: 630,
+      layers: [
+        { layer: "review_title", available_modifications: { text: "The worst Time-Travel movie ever made" } },
+        { layer: "frame", available_modifications: [] }
+      ],
+      published_version: 2, has_unpublished_edits: true, created_at: "2026-05-01T12:00:00.000000Z"
+    }))
 
     template = client.templates.find(ID)
 
     assert_equal 2, template.published_version
     assert template.has_unpublished_edits
+    assert_equal %w[ review_title frame ], template.layers.map(&:layer)
+  end
+
+  def test_a_layer_with_no_override_has_an_empty_map
+    stub_api(:get, "/v1/templates/#{ID}").to_return(json(data: { uuid: ID, layers: [ { layer: "frame", available_modifications: [] } ] }))
+    stub_api(:get, "/v1/templates").to_return(json(data: [ { uuid: ID, layers: [ { layer: "frame", available_modifications: [] } ] } ], meta: {}))
+
+    assert_equal({}, client.templates.find(ID).layers.first.available_modifications.to_h)
+    assert_equal({}, client.templates.list.first.layers.first.available_modifications.to_h)
   end
 
   def test_find_a_missing_template
@@ -51,9 +69,20 @@ class Snapsbrew::TemplatesTest < Snapsbrew::TestCase
 
   def test_create
     stub = stub_api(:post, "/v1/templates").with(body: { title: "Launch card", size: "open_graph" })
-      .to_return(json(data: { uuid: ID, size: "open_graph" }, message: "Template created successfully"))
+      .to_return(json({ data: { uuid: ID, title: "Launch card", size: "open_graph", width: 1200, height: 630, created_at: "2026-05-01T12:00:00.000000Z" },
+                        message: "Template created successfully" }, status: 201))
 
     assert_equal ID, client.templates.create(title: "Launch card", size: "open_graph").uuid
+    assert_requested stub
+  end
+
+  def test_create_with_layer_objects
+    layers = [ { key: "title", type: "text", properties: [ { name: "textContent", value: "Hello" } ] } ]
+    stub = stub_api(:post, "/v1/templates").with(body: { title: "Launch card", layers: })
+      .to_return(json({ data: { uuid: ID }, message: "Template created successfully" }, status: 201))
+
+    client.templates.create(title: "Launch card", layers:)
+
     assert_requested stub
   end
 

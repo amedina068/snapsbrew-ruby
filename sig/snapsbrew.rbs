@@ -58,6 +58,7 @@ module Snapsbrew
 
   class SignedUrl
     PATH: String
+    TRUE_VALUES: Array[String]
 
     def self.canonical: (Hash[Symbol | String, String] params) -> String
     def self.sign: (Hash[Symbol | String, String] params, String key) -> String
@@ -171,6 +172,7 @@ module Snapsbrew
     attr_reader status: Integer
     attr_reader body: untyped
     attr_reader request_id: String?
+    attr_reader code: String?
 
     def self.for: (Net::HTTPResponse response) -> ApiError
     def self.class_for: (Integer status) -> singleton(ApiError)
@@ -188,9 +190,11 @@ module Snapsbrew
   end
 
   class ConflictError < ApiError
+    def in_progress?: () -> bool
   end
 
   class RateLimitError < ApiError
+    def limit: () -> Integer?
   end
 
   class ServerError < ApiError

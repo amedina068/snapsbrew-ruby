@@ -160,20 +160,37 @@ Snapsbrew.templates.publish(id)
 Snapsbrew.templates.destroy(id)
 ```
 
+Each layer of a template has `layer` and `available_modifications`. `available_modifications` maps each override to its current value. A layer with no override has an empty map.
+
+To create or update the layers, give layer objects:
+
+```ruby
+Snapsbrew.templates.create(title: "Launch card", size: "open_graph", layers: [
+  { key: "title", type: "text", properties: [ { name: "textContent", value: "Hello" } ] }
+])
+```
+
+`templates.update` cannot change a template that uses the v2 editor document. It raises a `ConflictError` with the code `legacy_edit_rejected_for_v2`.
+
 ### Screenshots, media and tags
 
 ```ruby
 Snapsbrew.screenshots.create(url: "https://example.com", width: 1280, height: 720)
 Snapsbrew.screenshots.find(uuid)
-Snapsbrew.screenshots.each { |screenshot| }
+Snapsbrew.screenshots.each { |screenshot| screenshot.image_url }
 
 Snapsbrew.media.upload("logo.png")        # A path, a File, or an uploaded file from a form
 Snapsbrew.media.each { |image| image.src }
+Snapsbrew.media.list(page: 2).meta.total  # The page fields of the Laravel paginator
 
 Snapsbrew.tags.list(search: "launch")
 Snapsbrew.tags.create(name: "Launch")
 Snapsbrew.tags.sync(template: id, tag_ids: [ 1, 2 ])
 ```
+
+A screenshot from `create` and `find` has its id in `id`. A screenshot from `each` and `list` has the same value in `uuid`.
+
+Use the `src` of a media image as an `image_url` variant.
 
 ### Guides
 
@@ -204,6 +221,10 @@ Snapsbrew.signed_url(template: id, variants: [ { layer: "title", text: "Hello" }
 Each keyword other than `template`, `variants`, `format` and `transparent` is a layer. If a layer has one of these four names, give it in `variants`.
 
 The instance accepts `png`, `jpeg` and `webp` as `format`. For each other value, it renders a PNG.
+
+`transparent: true` is valid for `png` and `webp`. A JPEG cannot be transparent, so the builder raises `ArgumentError` for this pair.
+
+If the signature or the template is not valid, the instance returns a placeholder image with status 200. The `<img>` shows no error.
 
 **WARNING:** Keep the signing key on the server. Do not build signed URLs in a browser. A person with the key can render images on your account.
 
@@ -264,15 +285,15 @@ Each error is a `Snapsbrew::Error`.
 | `Snapsbrew::ConfigurationError`  | A setting is missing, for example the `url` or the `token`. |
 | `Snapsbrew::ConnectionError`     | The connection failed or timed out. The original error is in `cause`. |
 | `Snapsbrew::AuthenticationError` | 401. The token is missing or not valid. |
-| `Snapsbrew::AuthorizationError`  | 403. The token does not have the `api_requests` ability. |
+| `Snapsbrew::AuthorizationError`  | 403. The token does not have the `api_requests` ability, or a permission check refused the request. |
 | `Snapsbrew::NotFoundError`       | 404. |
-| `Snapsbrew::ConflictError`       | 409. Another request with the same `idempotency_key` is in progress. |
-| `Snapsbrew::ValidationError`     | 422. `errors` has the field errors. |
-| `Snapsbrew::RateLimitError`      | 429. `retry_after` has the seconds to wait. |
-| `Snapsbrew::ServerError`         | 5xx. |
+| `Snapsbrew::ConflictError`       | 409. `code` gives the cause. See [Conflicts](#conflicts). |
+| `Snapsbrew::ValidationError`     | 422. `errors` has the field errors. A `template_id` that does not exist in your company is a 422, not a 404. |
+| `Snapsbrew::RateLimitError`      | 429. `retry_after` has the seconds to wait. `limit` has the requests that the endpoint allows in one minute. |
+| `Snapsbrew::ServerError`         | 5xx. If `snaps.create` fails on the server, `code` is `internal_error`. |
 | `Snapsbrew::ApiError`            | Each other status. It is also the parent of the HTTP errors above. |
 
-Each `ApiError` has `status`, `body`, `message` and `request_id`. The `request_id` is the `X-Request-Uuid` header. Give it when you ask for support.
+Each `ApiError` has `status`, `body`, `message`, `code` and `request_id`. The `code` is the `code` field of the body, or `nil`. The `request_id` is the `X-Request-Uuid` header. Give it when you ask for support.
 
 ```ruby
 begin
@@ -282,12 +303,26 @@ rescue Snapsbrew::ValidationError => error
 end
 ```
 
+### Conflicts
+
+A `ConflictError` has one of these codes:
+
+| `code`                             | Cause | Retry |
+|------------------------------------|-------|-------|
+| `idempotency_key_in_progress`      | Another request with the same `idempotency_key` is in progress. | The client retries it. A repeat with the same key is safe. |
+| `idempotency_key_belongs_to_snap`  | A single snap owns the key, so `batches.create` cannot use it. | No. Send a new key. |
+| `idempotency_key_belongs_to_batch` | A batch owns the key, so `snaps.create` cannot use it. | No. Send a new key. |
+| `legacy_edit_rejected_for_v2`      | The template uses the v2 editor document, so `templates.update` cannot change it. | No. |
+
+`error.in_progress?` is true for `idempotency_key_in_progress`.
+
 ## Retries
 
 The client retries a failed request up to `max_retries` times:
 
 - It retries a 429 for each request. It waits for the seconds in `Retry-After`. If `Retry-After` is more than 60 seconds, it does not retry.
 - It retries a 5xx for an idempotent request only.
+- It retries a 409 with the code `idempotency_key_in_progress` for a request with an `idempotency_key`. It does not retry the other 409 codes.
 - It retries a connection error that occurs before the request reaches the server, for each request.
 - It retries a connection error that can occur after the server received the request, for example a read timeout, for an idempotent request only.
 

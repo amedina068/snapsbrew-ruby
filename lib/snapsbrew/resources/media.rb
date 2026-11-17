@@ -11,14 +11,15 @@ module Snapsbrew
       Record.wrap(post("/v1/media", form: { "file" => file_part(file) }))
     end
 
-    # One page of media, 12 for each page, newest first.
+    # One page of media, 12 for each page, newest first. The API returns a flat
+    # Laravel paginator, so meta holds the page fields, for example total and last_page.
     def list(page: nil)
       body = get("/v1/media", query: { page: }.compact)
-      current = body.dig("meta", "current_page") || page || 1
+      meta = body.except("data")
 
-      next_page = -> { list(page: current + 1) } if body.dig("links", "next")
+      next_page = -> { list(page: meta["current_page"] + 1) } if meta["next_page_url"]
 
-      Page.new(body["data"], body["meta"], &next_page)
+      Page.new(body["data"], meta, &next_page)
     end
 
     def each(&) = list.each_record(&)
