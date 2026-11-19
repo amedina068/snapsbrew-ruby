@@ -4,6 +4,38 @@ All notable changes to this project are in this file.
 
 The format is [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - Unreleased
+
+The gem adopts the OpenAPI spec of the app at `docs/api/openapi.yaml` (app PRs 93 and 95).
+
+### Added
+
+- `Snapsbrew::Webhook.verify` verifies the `X-Snapsbrew-Signature` and `X-Snapsbrew-Timestamp` headers of a webhook in constant time. It returns the decoded event, or raises `Snapsbrew::WebhookVerificationError` with the `reason` `:signature` or `:timestamp`. The tolerance is 300 seconds by default.
+- The verified event has `delivery_id`, the value of the `X-Snapsbrew-Delivery` header. Use it to ignore a duplicate delivery.
+- `Snapsbrew::Webhook::EVENTS` lists the events, with `snap.failed`.
+- `Snapsbrew::Webhook.sign` signs a body, for the tests of your webhook controller.
+- `config.webhook_secret`, with the fallback `SNAPSBREW_WEBHOOK_SECRET` and the Rails credential `snapsbrew.webhook_secret`.
+- `templates.create` and `templates.update` accept `groups`, the editor layer groups.
+- `ConflictError#current_revision` and `ConflictError#current_document` give the stored editor document after an `editor_document_conflict`.
+- `NotFoundError#available` gives the valid keys after a 404 from `guides.platform` or `guides.purpose`.
+- `Snapsbrew.documents` for the v2 editor document of a template: `find`, `replace`, `apply` and `preflight`. A write conflict raises a `ConflictError` with `current_revision` and `current_document`. An operation error raises a `ValidationError` with a `code` and no field errors. The client does not retry a write after a server error.
+- `Snapsbrew.forms.submit` sends the layers of an embedded form to its signed submit URL. It sends text as a field and an image as a file. It returns one snap for a template form, and an Array of snaps for a collection form. A 429 has the code `rate_limited`.
+- `Client#request` accepts a signed absolute URL. It sends no API token to such a URL.
+
+### Changed
+
+- `media.upload` also accepts a `Pathname`.
+- An error body with an empty `message`, for example the 404 of an embedded form with a bad signature, gives the message `Snapsbrew returned HTTP 404`.
+
+- The version is `0.2.0`.
+- The README documents the 403 `Invalid ability provided.` of each endpoint, the 422 of a cursor that is not valid, the 422 of an editor operation, and the 404 message of a missing record.
+- The README documents `last_error` as a code: `render_failed`, `webhook_redirect_refused`, `webhook_unreachable` or `webhook_http_<status>`. A batch item has `render_failed` only.
+- The README documents the upload rules of `media.upload` and the size limits of `screenshots.create`. The gem does not check them.
+- The README tells that a signed URL accepts each active signing key of the company, and that `templates.destroy` also removes the snaps, images, versions and forms of the template.
+- The README no longer says that a snap costs a credit. The instance keeps a usage log with no balance.
+- The README links to the SDK overview at <https://snapsbrew.com/docs/sdks/overview>.
+- The install generator shows `webhook_secret` in the credentials example.
+
 ## [0.1.0] - Unreleased
 
 ### Added

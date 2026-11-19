@@ -23,6 +23,7 @@ module Snapsbrew
               url: https://snaps.example.com
               token: your-api-token
               signing_key: your-signing-key
+              webhook_secret: whsec_your-webhook-secret
 
         TEXT
       end

@@ -11,7 +11,7 @@ class Snapsbrew::ConfigurationTest < Snapsbrew::TestCase
   def teardown
     Snapsbrew.instance_variable_set(:@config, @config)
     Snapsbrew.reset!
-    %w[ SNAPSBREW_URL SNAPSBREW_TOKEN SNAPSBREW_SIGNING_KEY ].each { |name| ENV.delete(name) }
+    %w[ SNAPSBREW_URL SNAPSBREW_TOKEN SNAPSBREW_SIGNING_KEY SNAPSBREW_WEBHOOK_SECRET ].each { |name| ENV.delete(name) }
   end
 
   def test_configure_builds_the_default_client
@@ -44,6 +44,13 @@ class Snapsbrew::ConfigurationTest < Snapsbrew::TestCase
     assert_equal({ url: "https://env.test", token: "env-token", signing_key: "env-key", timeout: 60, max_retries: 2 }, Snapsbrew.config.to_h)
   end
 
+  def test_the_webhook_secret_falls_back_to_the_environment
+    ENV["SNAPSBREW_WEBHOOK_SECRET"] = "whsec_env"
+
+    assert_equal "whsec_env", Snapsbrew.config.webhook_secret
+    refute Snapsbrew.config.to_h.key?(:webhook_secret)
+  end
+
   def test_merge_copies_known_keys_only
     Snapsbrew.config.merge!(url: URL, token: TOKEN, unknown: "x")
 
@@ -61,12 +68,16 @@ class Snapsbrew::ConfigurationTest < Snapsbrew::TestCase
 
     assert_equal "Ada Lovelace", Snapsbrew.account.name
     assert_instance_of Snapsbrew::Snaps, Snapsbrew.snaps
+    assert_instance_of Snapsbrew::Documents, Snapsbrew.documents
+    assert_instance_of Snapsbrew::Forms, Snapsbrew.forms
     assert Snapsbrew.signed_url(template: "t1", title: "Hello").start_with?("#{URL}/signed-url/image.jpg?")
   end
 
-  def test_inspect_hides_the_token
+  def test_inspect_hides_the_secrets
     Snapsbrew.config.token = "secret-token"
+    Snapsbrew.config.webhook_secret = "whsec_secret"
 
     refute_includes Snapsbrew.config.inspect, "secret-token"
+    refute_includes Snapsbrew.config.inspect, "whsec_secret"
   end
 end

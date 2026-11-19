@@ -23,6 +23,7 @@ ActiveSupport::EncryptedConfiguration.new(
     url: https://snaps.test
     token: credentials-token
     signing_key: credentials-key
+    webhook_secret: whsec_credentials
 YAML
 
 class Dummy < Rails::Application

@@ -13,11 +13,26 @@ module Snapsbrew
 
       def get(path, **options)    = client.request(:get, path, **options)
       def post(path, **options)   = client.request(:post, path, **options)
+      def put(path, **options)    = client.request(:put, path, **options)
       def patch(path, **options)  = client.request(:patch, path, **options)
       def delete(path, **options) = client.request(:delete, path, **options)
 
       def escape(segment)
         URI.encode_uri_component(segment.to_s)
+      end
+
+      # A multipart file part from a path, a Pathname, a File, or an uploaded file from a form.
+      def file_part(file)
+        return File.open(file, "rb") { |opened| file_part(opened) } if file.is_a?(String) || file.is_a?(Pathname)
+
+        filename = if file.respond_to?(:original_filename) then file.original_filename
+        elsif file.respond_to?(:path) then File.basename(file.path)
+        else "image"
+        end
+        content_type = file.content_type if file.respond_to?(:content_type)
+        file.rewind if file.respond_to?(:rewind)
+
+        [ file.read, { filename:, content_type: }.compact ]
       end
 
       # A cursor list: GET /v1/templates, GET /v1/screenshots. A block can

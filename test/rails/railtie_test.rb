@@ -5,6 +5,7 @@ class Snapsbrew::RailtieTest < ActiveSupport::TestCase
     assert_equal "https://snaps.test", Snapsbrew.config.url
     assert_equal "credentials-token", Snapsbrew.config.token
     assert_equal "credentials-key", Snapsbrew.config.signing_key
+    assert_equal "whsec_credentials", Snapsbrew.config.webhook_secret
   end
 
   test "an initializer runs after the credentials and wins" do

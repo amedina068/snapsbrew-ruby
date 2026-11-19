@@ -33,6 +33,14 @@ class Snapsbrew::GuidesTest < Snapsbrew::TestCase
 
     error = assert_raises(Snapsbrew::NotFoundError) { client.guides.platform(:myspace) }
 
-    assert_equal %w[ instagram x ], error.body["available"]
+    assert_equal %w[ instagram x ], error.available
+  end
+
+  def test_unknown_purpose
+    stub_api(:get, "/v1/guides/purposes/flyer").to_return(json({ message: "No image purpose guide matches `flyer`.", available: %w[ link_preview ] }, status: 404))
+
+    error = assert_raises(Snapsbrew::NotFoundError) { client.guides.purpose(:flyer) }
+
+    assert_equal %w[ link_preview ], error.available
   end
 end

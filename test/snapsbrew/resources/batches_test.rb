@@ -67,7 +67,7 @@ class Snapsbrew::BatchesTest < Snapsbrew::TestCase
       completed: 1, pending: 0, failed: 1, canceled: 0, status_url: "#{URL}/api/v1/snaps/batches/#{ID}",
       items: [
         { id: "9f1c2d3e", identifier: "row-1", status: "completed", media_url: "https://snaps.test/a.png", last_error: nil },
-        { id: "4b8a7c6d", identifier: "item_2", status: "failed", media_url: nil, last_error: "The image could not be loaded." }
+        { id: "4b8a7c6d", identifier: "item_2", status: "failed", media_url: nil, last_error: "render_failed" }
       ]
     }))
 
@@ -75,6 +75,7 @@ class Snapsbrew::BatchesTest < Snapsbrew::TestCase
 
     assert_equal "completed", batch.status
     assert_equal [ "https://snaps.test/a.png" ], batch.items.filter_map(&:media_url)
+    assert_equal [ nil, "render_failed" ], batch.items.map(&:last_error)
   end
 
   def test_cancel_is_retried_because_it_is_idempotent

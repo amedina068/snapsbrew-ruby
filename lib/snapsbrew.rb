@@ -1,6 +1,7 @@
 require "json"
 require "net/http"
 require "openssl"
+require "pathname"
 require "securerandom"
 require "time"
 require "uri"
@@ -12,6 +13,7 @@ require "snapsbrew/record"
 require "snapsbrew/page"
 require "snapsbrew/variants"
 require "snapsbrew/signed_url"
+require "snapsbrew/webhook"
 require "snapsbrew/resource"
 require "snapsbrew/resources/guides"
 require "snapsbrew/resources/templates"
@@ -20,6 +22,8 @@ require "snapsbrew/resources/batches"
 require "snapsbrew/resources/screenshots"
 require "snapsbrew/resources/media"
 require "snapsbrew/resources/tags"
+require "snapsbrew/resources/documents"
+require "snapsbrew/resources/forms"
 require "snapsbrew/client"
 
 # A client for one Snapsbrew instance.
@@ -31,6 +35,9 @@ require "snapsbrew/client"
 #
 #   Snapsbrew.snaps.create(template: id, variants: { title: "Hello" })
 #   Snapsbrew.signed_url(template: id, title: "Hello")
+#   Snapsbrew.documents.apply(id, revision: 4, operations: [ ... ])
+#   Snapsbrew.forms.submit(submit_url, headline: "Hello")
+#   Snapsbrew::Webhook.verify(request.raw_post, request.headers)
 module Snapsbrew
   class << self
     def configure
@@ -58,6 +65,8 @@ module Snapsbrew
     def screenshots  = client.screenshots
     def media        = client.media
     def tags         = client.tags
+    def documents    = client.documents
+    def forms        = client.forms
 
     def signed_url(...) = client.signed_url(...)
   end

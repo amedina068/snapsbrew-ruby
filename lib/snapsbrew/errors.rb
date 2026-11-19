@@ -42,8 +42,11 @@ module Snapsbrew
       @body = body
       @request_id = response["X-Request-Uuid"]
       @retry_after = response["Retry-After"]
-      @code = body["code"] if body.is_a?(Hash)
-      super(body.is_a?(Hash) && body["message"] || [ "Snapsbrew returned HTTP #{status}", code ].compact.join(": "))
+      @code = field("code")
+
+      # An embedded form with a bad signature returns an empty message.
+      message = field("message").to_s
+      super(message.empty? ? [ "Snapsbrew returned HTTP #{status}", code ].compact.join(": ") : message)
     end
 
     # The seconds to wait before the next request, from the Retry-After header.
@@ -54,11 +57,30 @@ module Snapsbrew
     rescue ArgumentError
       nil
     end
+
+    private
+      # A body that is not JSON, for example the HTML of a proxy, has no fields.
+      def field(name)
+        body[name] if body.is_a?(Hash)
+      end
   end
 
   class AuthenticationError < ApiError; end
+
+  # A 403. A token without the api_requests ability gets the message
+  # "Invalid ability provided." on each endpoint.
   class AuthorizationError < ApiError; end
-  class NotFoundError < ApiError; end
+
+  # A 404. Do not read the message to know the cause. A missing record
+  # returns a message from the framework, for example "No query results for model [...]".
+  class NotFoundError < ApiError
+    # The valid keys of an unknown platform or purpose guide, for example ["instagram", "facebook"].
+    # Empty for each other 404.
+    def available
+      field("available") || []
+    end
+  end
+
   class ServerError < ApiError; end
 
   class RateLimitError < ApiError
@@ -80,16 +102,25 @@ module Snapsbrew
   # - idempotency_key_belongs_to_snap: a single snap owns the key. Send the batch with a new key.
   # - idempotency_key_belongs_to_batch: a batch owns the key. Send the snap with a new key.
   # - legacy_edit_rejected_for_v2: the template uses the v2 editor document, so templates.update cannot change it.
+  # - editor_document_conflict: another write changed the editor document. Read current_revision and current_document.
   class ConflictError < ApiError
     def in_progress?
       code == "idempotency_key_in_progress"
     end
+
+    # The stored revision of the editor document, or nil for each other conflict.
+    def current_revision = field("current_revision")
+
+    # The stored editor document as a Record, or nil for each other conflict.
+    def current_document = Record.wrap(field("current_document"))
   end
 
+  # A 422. Most bodies have field errors. An editor operation error has a code
+  # and no field errors, for example editor_operation_layer_not_found.
   class ValidationError < ApiError
     # The field errors, for example { "template_id" => ["The template id field is required."] }.
     def errors
-      body.is_a?(Hash) && body["errors"] || {}
+      field("errors") || {}
     end
   end
 end

@@ -17,7 +17,7 @@ module Snapsbrew
       Record.wrap(post("/v1/snaps", json: body, idempotent: !idempotency_key.nil?))
     end
 
-    # Returns the watermarked HTML preview of a snap. A preview costs no credit.
+    # Returns the watermarked HTML preview of a snap.
     def preview(template:, variants: nil)
       get("/v1/snaps/preview", query: { template_id: template, variants: Variants.normalize(variants) }.compact)
     end

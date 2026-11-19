@@ -4,7 +4,7 @@ require "snapsbrew"
 require "minitest/autorun"
 
 # Talks to a real Snapsbrew instance. The tests read only, except for one
-# preview, which costs no credit.
+# preview.
 #
 #   SNAPSBREW_TEST_URL=https://snaps.example.com SNAPSBREW_TEST_TOKEN=... bin/rake test:integration
 class Snapsbrew::LiveTest < Minitest::Test

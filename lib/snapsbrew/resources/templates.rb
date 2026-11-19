@@ -13,14 +13,17 @@ module Snapsbrew
     # The canvas size presets, for example instagram_story and open_graph.
     def sizes = Record.wrap(get("/v1/templates/sizes")["data"])
 
-    def create(title:, size: nil, width: nil, height: nil, layers: nil)
-      Record.wrap(post("/v1/templates", json: { title:, size:, width:, height:, layers: }.compact)["data"])
+    # groups are the editor layer groups, for example [ { id: "header", name: "Header", order: 0 } ].
+    def create(title:, size: nil, width: nil, height: nil, layers: nil, groups: nil)
+      Record.wrap(post("/v1/templates", json: { title:, size:, width:, height:, layers:, groups: }.compact)["data"])
     end
 
-    def update(uuid, title:, size: nil, width: nil, height: nil, layers: nil)
-      Record.wrap(patch("/v1/templates/#{escape(uuid)}", json: { title:, size:, width:, height:, layers: }.compact)["data"])
+    # Changes only the fields that you give. Give groups: [] to remove the groups.
+    def update(uuid, title:, size: nil, width: nil, height: nil, layers: nil, groups: nil)
+      Record.wrap(patch("/v1/templates/#{escape(uuid)}", json: { title:, size:, width:, height:, layers:, groups: }.compact)["data"])
     end
 
+    # Also removes the snaps, images, versions and forms of the template.
     def destroy(uuid)
       delete("/v1/templates/#{escape(uuid)}")
       true

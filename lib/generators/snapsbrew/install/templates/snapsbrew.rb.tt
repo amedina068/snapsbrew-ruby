@@ -1,5 +1,5 @@
-# Snapsbrew reads url, token and signing_key from Rails.application.credentials.snapsbrew.
-# Without credentials, it reads SNAPSBREW_URL, SNAPSBREW_TOKEN and SNAPSBREW_SIGNING_KEY.
+# Snapsbrew reads url, token, signing_key and webhook_secret from Rails.application.credentials.snapsbrew.
+# Without credentials, it reads SNAPSBREW_URL, SNAPSBREW_TOKEN, SNAPSBREW_SIGNING_KEY and SNAPSBREW_WEBHOOK_SECRET.
 Snapsbrew.configure do |config|
   # config.url = "https://snaps.example.com"
 

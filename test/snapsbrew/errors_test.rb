@@ -24,6 +24,46 @@ class Snapsbrew::ErrorsTest < Snapsbrew::TestCase
     end
   end
 
+  {
+    account: ->(client) { client.account },
+    guides_design: ->(client) { client.guides.design },
+    guides_platform: ->(client) { client.guides.platform(:instagram) },
+    guides_purpose: ->(client) { client.guides.purpose(:og) },
+    templates_list: ->(client) { client.templates.list },
+    templates_find: ->(client) { client.templates.find("t1") },
+    templates_sizes: ->(client) { client.templates.sizes },
+    templates_create: ->(client) { client.templates.create(title: "Card", size: "open_graph") },
+    templates_update: ->(client) { client.templates.update("t1", title: "Card") },
+    templates_destroy: ->(client) { client.templates.destroy("t1") },
+    templates_publish: ->(client) { client.templates.publish("t1") },
+    documents_find: ->(client) { client.documents.find("t1") },
+    documents_replace: ->(client) { client.documents.replace("t1", revision: 1, document: { layers: [] }) },
+    documents_apply: ->(client) { client.documents.apply("t1", revision: 1, operations: []) },
+    documents_preflight: ->(client) { client.documents.preflight("t1") },
+    snaps_create: ->(client) { client.snaps.create(template: "t1") },
+    snaps_preview: ->(client) { client.snaps.preview(template: "t1") },
+    batches_create: ->(client) { client.batches.create(template: "t1", items: [ { variants: { title: "Hi" } } ]) },
+    batches_find: ->(client) { client.batches.find("b1") },
+    batches_cancel: ->(client) { client.batches.cancel("b1") },
+    screenshots_create: ->(client) { client.screenshots.create(url: "https://example.com") },
+    screenshots_list: ->(client) { client.screenshots.list },
+    screenshots_find: ->(client) { client.screenshots.find("s1") },
+    media_upload: ->(client) { client.media.upload(StringIO.new("x")) },
+    media_list: ->(client) { client.media.list },
+    tags_list: ->(client) { client.tags.list },
+    tags_create: ->(client) { client.tags.create(name: "Launch") },
+    tags_sync: ->(client) { client.tags.sync(template: "t1", tag_ids: [ 1 ]) }
+  }.each do |operation, call|
+    define_method("test_a_token_without_the_ability_is_an_authorization_error_on_#{operation}") do
+      stub = stub_request(:any, /\A#{URL}/).to_return(json({ message: "Invalid ability provided." }, status: 403))
+
+      error = assert_raises(Snapsbrew::AuthorizationError) { call.(client) }
+
+      assert_equal "Invalid ability provided.", error.message
+      assert_requested stub, times: 1
+    end
+  end
+
   def test_a_refused_snap_is_an_authorization_error
     stub_api(:post, "/v1/snaps").to_return(json({ message: "This action is unauthorized." }, status: 403))
 
@@ -68,6 +108,57 @@ class Snapsbrew::ErrorsTest < Snapsbrew::TestCase
     stub_api(:get, "/v1/templates/nope").to_return(json({ message: "Not found." }, status: 404))
 
     assert_nil assert_raises(Snapsbrew::NotFoundError) { client.templates.find("nope") }.code
+  end
+
+  def test_a_missing_record_is_a_not_found_error_whatever_the_message
+    stub_api(:get, "/v1/snaps/batches/nope").to_return(json({ message: "No query results for model [App\\Models\\SnapImport]." }, status: 404))
+
+    error = assert_raises(Snapsbrew::NotFoundError) { client.batches.find("nope") }
+
+    assert_equal "No query results for model [App\\Models\\SnapImport].", error.message
+    assert_equal [], error.available
+  end
+
+  def test_an_editor_document_conflict_carries_the_current_revision_and_document
+    stub_api(:put, "/v1/templates/t1/document").to_return(json({
+      code: "editor_document_conflict", current_revision: 8, current_document: { layers: [ { id: "title" } ], groups: [] }
+    }, status: 409))
+
+    error = assert_raises(Snapsbrew::ConflictError) { client.request(:put, "/v1/templates/t1/document", json: { revision: 7 }) }
+
+    assert_equal "editor_document_conflict", error.code
+    assert_equal 8, error.current_revision
+    assert_equal "title", error.current_document.layers.first.id
+    refute error.in_progress?
+  end
+
+  def test_a_conflict_without_a_document
+    stub_api(:patch, "/v1/templates/t1").to_return(json({ code: "legacy_edit_rejected_for_v2" }, status: 409))
+
+    error = assert_raises(Snapsbrew::ConflictError) { client.templates.update("t1", title: "New") }
+
+    assert_nil error.current_revision
+    assert_nil error.current_document
+  end
+
+  def test_an_editor_operation_error_is_a_validation_error_with_a_code
+    stub_api(:patch, "/v1/templates/t1/document").to_return(json({ code: "editor_operation_layer_not_found" }, status: 422))
+
+    error = assert_raises(Snapsbrew::ValidationError) { client.request(:patch, "/v1/templates/t1/document", json: { revision: 7 }) }
+
+    assert_equal "editor_operation_layer_not_found", error.code
+    assert_equal({}, error.errors)
+    assert_equal "Snapsbrew returned HTTP 422: editor_operation_layer_not_found", error.message
+  end
+
+  def test_a_bad_cursor_is_a_validation_error
+    stub_api(:get, "/v1/templates", query: { cursor: "bad" }).to_return(json({
+      message: "The cursor is not valid.", errors: { cursor: [ "The cursor is not valid." ] }
+    }, status: 422))
+
+    error = assert_raises(Snapsbrew::ValidationError) { client.templates.list(cursor: "bad") }
+
+    assert_equal [ "The cursor is not valid." ], error.errors["cursor"]
   end
 
   def test_validation_error_carries_the_field_errors

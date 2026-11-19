@@ -15,12 +15,15 @@ module Snapsbrew
   def self.screenshots: () -> Screenshots
   def self.media: () -> Media
   def self.tags: () -> Tags
+  def self.documents: () -> Documents
+  def self.forms: () -> Forms
   def self.signed_url: (template: String, ?variants: variants?, ?format: String?, ?transparent: bool?, **untyped) -> String
 
   class Configuration
     attr_writer url: String?
     attr_writer token: String?
     attr_writer signing_key: String?
+    attr_writer webhook_secret: String?
     attr_accessor timeout: Numeric
     attr_accessor max_retries: Integer
 
@@ -28,6 +31,7 @@ module Snapsbrew
     def url: () -> String?
     def token: () -> String?
     def signing_key: () -> String?
+    def webhook_secret: () -> String?
     def merge!: (Hash[Symbol | String, untyped]? settings) -> self
     def to_h: () -> Hash[Symbol, untyped]
   end
@@ -52,6 +56,8 @@ module Snapsbrew
     def screenshots: () -> Screenshots
     def media: () -> Media
     def tags: () -> Tags
+    def documents: () -> Documents
+    def forms: () -> Forms
     def signed_url: (template: String, ?variants: variants?, ?format: String?, ?transparent: bool?, **untyped) -> String
     def request: (Symbol method, String path, ?query: Hash[Symbol | String, untyped]?, ?json: untyped, ?form: Hash[String, untyped]?, ?idempotent: bool) -> untyped
   end
@@ -97,6 +103,10 @@ module Snapsbrew
 
   class Resource
     def initialize: (Client client) -> void
+
+    private
+
+    def file_part: (untyped file) -> [String, Hash[Symbol, String]]
   end
 
   class Guides < Resource
@@ -117,8 +127,11 @@ module Snapsbrew
     def each: () { (Record) -> void } -> void
     def find: (String uuid) -> Record
     def sizes: () -> Array[Record]
-    def create: (title: String, ?size: String?, ?width: Integer?, ?height: Integer?, ?layers: Array[untyped]?) -> Record
-    def update: (String uuid, title: String, ?size: String?, ?width: Integer?, ?height: Integer?, ?layers: Array[untyped]?) -> Record
+    type group = { id: String, ?name: String?, ?visible: bool, ?collapsed: bool, ?order: Integer }
+
+    def create: (title: String, ?size: String?, ?width: Integer?, ?height: Integer?, ?layers: Array[untyped]?, ?groups: Array[group]?) -> Record
+    def update: (String uuid, title: String, ?size: String?, ?width: Integer?, ?height: Integer?, ?layers: Array[untyped]?,
+                 ?groups: Array[group]?) -> Record
     def destroy: (String uuid) -> true
     def publish: (String uuid) -> Record
   end
@@ -153,6 +166,19 @@ module Snapsbrew
     def each: () { (Record) -> void } -> void
   end
 
+  class Documents < Resource
+    type operation = { operation: "set_layer_property" | "set_layer_type", layer_key: String, ?property: String, ?value: untyped, ?type: String }
+
+    def find: (String uuid) -> Record
+    def replace: (String uuid, revision: Integer, document: Hash[Symbol | String, untyped]) -> Record
+    def apply: (String uuid, revision: Integer, operations: Array[operation]) -> Record
+    def preflight: (String uuid) -> Record
+  end
+
+  class Forms < Resource
+    def submit: (String url, ?Hash[Symbol | String, untyped] layers) -> (Record | Array[Record])
+  end
+
   class Tags < Resource
     def list: (?search: String?) -> Array[Record]
     def create: (name: String) -> Record
@@ -178,6 +204,10 @@ module Snapsbrew
     def self.class_for: (Integer status) -> singleton(ApiError)
     def initialize: (Net::HTTPResponse response, untyped body) -> void
     def retry_after: () -> Integer?
+
+    private
+
+    def field: (String name) -> untyped
   end
 
   class AuthenticationError < ApiError
@@ -187,10 +217,13 @@ module Snapsbrew
   end
 
   class NotFoundError < ApiError
+    def available: () -> Array[String]
   end
 
   class ConflictError < ApiError
     def in_progress?: () -> bool
+    def current_revision: () -> Integer?
+    def current_document: () -> Record?
   end
 
   class RateLimitError < ApiError
@@ -202,6 +235,29 @@ module Snapsbrew
 
   class ValidationError < ApiError
     def errors: () -> Hash[String, Array[String]]
+  end
+
+  class WebhookVerificationError < Error
+    attr_reader reason: :signature | :timestamp
+
+    def initialize: (:signature | :timestamp reason, String message) -> void
+  end
+
+  module Webhook
+    DELIVERY: String
+    TIMESTAMP: String
+    SIGNATURE: String
+    TOLERANCE: Integer
+    EVENTS: Array[String]
+
+    class Event < Record
+      attr_reader delivery_id: String?
+
+      def initialize: (Hash[String, untyped] attributes, delivery_id: String?) -> void
+    end
+
+    def self.verify: (String body, untyped headers, ?secret: String?, ?tolerance: Integer, ?now: Time | Integer) -> Event
+    def self.sign: (String | Integer timestamp, String body, String secret) -> String
   end
 
   module Helper

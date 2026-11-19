@@ -36,13 +36,17 @@ module Snapsbrew
     def screenshots = @screenshots ||= Screenshots.new(self)
     def media       = @media ||= Media.new(self)
     def tags        = @tags ||= Tags.new(self)
+    def documents   = @documents ||= Documents.new(self)
+    def forms       = @forms ||= Forms.new(self)
 
     #   client.signed_url(template: id, title: "Hello", cover: "https://example.com/a.jpg")
     def signed_url(**options)
       SignedUrl.new(url:, key: @signing_key).build(**options)
     end
 
-    # Sends one request to the API and returns the parsed body.
+    # Sends one request to the API and returns the parsed body. The path is
+    # relative to {url}/api, or a signed absolute URL, for example the submit
+    # URL of an embedded form.
     #
     # Retries a 429 and a connection error that happened before the request
     # reached the server. Retries a 5xx and a later connection error only when
@@ -81,14 +85,10 @@ module Snapsbrew
 
     private
       def transmit(method, path, query:, json:, form:)
-        raise ConfigurationError, "Set the Snapsbrew url, for example https://snaps.example.com" if url.empty?
-        raise ConfigurationError, "Set the Snapsbrew token" if @token.to_s.empty?
-
-        uri = URI("#{url}/api#{path}")
-        uri.query = to_query(query) if query && !query.empty?
+        uri = absolute_url?(path) ? URI(path) : api_uri(path, query)
 
         request = Net::HTTP.const_get(method.to_s.capitalize).new(uri)
-        request["Authorization"] = "Bearer #{@token}"
+        request["Authorization"] = "Bearer #{@token}" unless absolute_url?(path)
         request["Accept"] = "application/json"
         request["User-Agent"] = "snapsbrew-ruby/#{VERSION}"
 
@@ -107,14 +107,39 @@ module Snapsbrew
         end
       end
 
+      def api_uri(path, query)
+        raise ConfigurationError, "Set the Snapsbrew url, for example https://snaps.example.com" if url.empty?
+        raise ConfigurationError, "Set the Snapsbrew token" if @token.to_s.empty?
+
+        uri = URI("#{url}/api#{path}")
+        uri.query = to_query(query) if query && !query.empty?
+        uri
+      end
+
+      # A signed URL carries its own authorization. The token goes only to the
+      # API of the configured instance, never to a URL that a caller gives.
+      def absolute_url?(path)
+        path.start_with?("http://", "https://")
+      end
+
       # Net::HTTP#set_form streams the body, so it cannot replay it on a retry.
-      # A String body can be sent again.
+      # A String body can be sent again. A field is text, or a file part as
+      # [ data, { filename:, content_type: } ].
       def multipart(form, boundary)
-        form.each_with_object(String.new(encoding: Encoding::BINARY)) do |(name, (data, options)), body|
+        form.each_with_object(String.new(encoding: Encoding::BINARY)) do |(name, value), body|
           body << "--#{boundary}\r\n"
-          body << %(Content-Disposition: form-data; name="#{name}"; filename="#{options[:filename].to_s.delete("\"\r\n")}"\r\n).b
-          body << "Content-Type: #{options[:content_type] || "application/octet-stream"}\r\n\r\n"
-          body << data.b << "\r\n"
+          body << %(Content-Disposition: form-data; name="#{name.to_s.delete("\"\r\n")}").b
+
+          if value.is_a?(Array)
+            data, options = value
+            body << %(; filename="#{options[:filename].to_s.delete("\"\r\n")}"\r\n).b
+            body << "Content-Type: #{options[:content_type] || "application/octet-stream"}\r\n"
+          else
+            data = value.to_s
+            body << "\r\n"
+          end
+
+          body << "\r\n" << data.b << "\r\n"
         end << "--#{boundary}--\r\n"
       end
 

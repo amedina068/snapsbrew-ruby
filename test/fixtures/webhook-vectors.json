@@ -1,0 +1,82 @@
+{
+    "algorithm": "HMAC-SHA256 hex of \"{X-Snapsbrew-Timestamp}.{raw body}\", with the webhook signing secret of the company as the key. Compare in constant time.",
+    "secret": "whsec_test0123456789abcdefghijklmnopqrstuvwx",
+    "now": 1767225600,
+    "tolerance_seconds": 300,
+    "note": "Check the cases at \"now\". A verifier must also refuse a timestamp more than tolerance_seconds from the current time.",
+    "cases": [
+        {
+            "name": "snap.completed",
+            "valid": true,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            },
+            "signed_string": "1767225600.{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}"
+        },
+        {
+            "name": "snap.failed",
+            "valid": true,
+            "body": "{\"event\":\"snap.failed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"failed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":\"render_failed\",\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "7a9fc5e2ceb214b643b966e9343ab8ee64f772bd84932d1b678314df36bcef17"
+            },
+            "signed_string": "1767225600.{\"event\":\"snap.failed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"failed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":\"render_failed\",\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}"
+        },
+        {
+            "name": "snap-import.completed",
+            "valid": true,
+            "body": "{\"event\":\"snap-import.completed\",\"import\":{\"uuid\":\"7c1f2a9e-0b44-4a1e-9f2b-5d3c8e1a7b60\",\"title\":\"October launch\",\"status\":\"completed\",\"total_rows\":2,\"processed_rows\":2,\"completed\":2,\"pending\":0,\"failed\":0,\"canceled\":0},\"template\":{\"uuid\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"title\":\"Launch card\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "1b1fc565d06f08c236d28af934f668d008b098cee5ba3c6a720bdde6f3b2f6b1"
+            },
+            "signed_string": "1767225600.{\"event\":\"snap-import.completed\",\"import\":{\"uuid\":\"7c1f2a9e-0b44-4a1e-9f2b-5d3c8e1a7b60\",\"title\":\"October launch\",\"status\":\"completed\",\"total_rows\":2,\"processed_rows\":2,\"completed\":2,\"pending\":0,\"failed\":0,\"canceled\":0},\"template\":{\"uuid\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"title\":\"Launch card\"}}"
+        },
+        {
+            "name": "body changed after signing",
+            "valid": false,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            }
+        },
+        {
+            "name": "timestamp changed after signing",
+            "valid": false,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Timestamp": "1767225601",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            }
+        },
+        {
+            "name": "signed with another secret",
+            "valid": false,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Signature": "9c583b75af5af0b48f30f3dbe05dbea7740975be0cd0438dfea42650ba265959",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600"
+            }
+        },
+        {
+            "name": "body decoded and encoded again",
+            "valid": false,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https://snapsbrew.example/storage/snaps/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https://example.com/hooks/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"¿Launch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            }
+        }
+    ]
+}

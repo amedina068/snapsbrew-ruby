@@ -25,19 +25,5 @@ module Snapsbrew
     end
 
     def each(&) = list.each_record(&)
-
-    private
-      def file_part(file)
-        return File.open(file, "rb") { |opened| file_part(opened) } unless file.respond_to?(:read)
-
-        filename = if file.respond_to?(:original_filename) then file.original_filename
-        elsif file.respond_to?(:path) then File.basename(file.path)
-        else "image"
-        end
-        content_type = file.content_type if file.respond_to?(:content_type)
-        file.rewind if file.respond_to?(:rewind)
-
-        [ file.read, { filename:, content_type: }.compact ]
-      end
   end
 end

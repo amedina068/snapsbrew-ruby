@@ -15,6 +15,7 @@ class Snapsbrew::InstallGeneratorTest < Rails::Generators::TestCase
       assert_match "Rails.application.credentials.snapsbrew", initializer
     end
     assert_match "bin/rails credentials:edit", output
+    assert_match "webhook_secret: whsec_", output
   end
 
   test "the initializer is valid Ruby" do
