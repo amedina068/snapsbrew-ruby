@@ -12,6 +12,7 @@ class Snapsbrew::ConfigurationTest < Snapsbrew::TestCase
     Snapsbrew.instance_variable_set(:@config, @config)
     Snapsbrew.reset!
     %w[ SNAPSBREW_URL SNAPSBREW_TOKEN SNAPSBREW_SIGNING_KEY SNAPSBREW_WEBHOOK_SECRET ].each { |name| ENV.delete(name) }
+    super
   end
 
   def test_configure_builds_the_default_client
