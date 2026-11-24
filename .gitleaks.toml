@@ -1,0 +1,14 @@
+# gitleaks configuration. gitleaks reads this file from the root of the
+# repository. The file keeps all the default rules. It only allows the
+# shared test vectors of the SDK contract. Their keys and secrets are
+# public test values, not real secrets.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public test vectors of the SDK contract"
+paths = [
+  '''(^|/)test/fixtures/signed-url-vectors\.json$''',
+  '''(^|/)test/fixtures/webhook-vectors\.json$''',
+]
