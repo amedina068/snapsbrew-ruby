@@ -10,6 +10,11 @@ The gem adopts the OpenAPI spec of the app at `docs/api/openapi.yaml` (app PRs 9
 
 ### Added
 
+- `templates.preview(uuid, variants:)` returns the watermarked HTML preview of a template, the same as in the other SDKs.
+- `templates.set_tags(uuid, tag_ids)` replaces the tags of a template.
+- `WebhookVerificationError#reason` can be `:payload`: the signature is valid, but the body is not a JSON object.
+- The webhook vectors have the expected `reason` of each invalid case and the `delivery_id` of each valid case.
+- The gem is under the MIT License. The gemspec has `license = "MIT"`.
 - `Snapsbrew::Webhook.verify` verifies the `X-Snapsbrew-Signature` and `X-Snapsbrew-Timestamp` headers of a webhook in constant time. It returns the decoded event, or raises `Snapsbrew::WebhookVerificationError` with the `reason` `:signature` or `:timestamp`. The tolerance is 300 seconds by default.
 - The verified event has `delivery_id`, the value of the `X-Snapsbrew-Delivery` header. Use it to ignore a duplicate delivery.
 - `Snapsbrew::Webhook::EVENTS` lists the events, with `snap.failed`.
@@ -23,6 +28,17 @@ The gem adopts the OpenAPI spec of the app at `docs/api/openapi.yaml` (app PRs 9
 - `Client#request` accepts a signed absolute URL. It sends no API token to such a URL.
 
 ### Changed
+
+- `templates.destroy` and each other `DELETE` or `PUT` request are retried after a 5xx or a timeout, the same as in the other SDKs. `documents.replace` is still never retried after a 5xx or a timeout, because a repeat gets a 409.
+- `Webhook.verify` reads the headers without case, and takes the first value of a list.
+- `Webhook.verify` accepts an uppercase hex signature. It changes the signature to lowercase before the constant-time compare.
+- A missing or malformed `X-Snapsbrew-Timestamp` header raises the reason `:timestamp`. It was `:signature`.
+- An empty `X-Snapsbrew-Delivery` header gives a `nil` delivery ID.
+- Invalid JSON after a valid signature raises `WebhookVerificationError` with the reason `:payload`. It was `JSON::ParserError`.
+
+### Removed
+
+- Breaking: `tags.sync(template:, tag_ids:)`. Use `templates.set_tags(uuid, tag_ids)`.
 
 - `media.upload` also accepts a `Pathname`.
 - An error body with an empty `message`, for example the 404 of an embedded form with a bad signature, gives the message `Snapsbrew returned HTTP 404`.

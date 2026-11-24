@@ -173,6 +173,8 @@ Snapsbrew.templates.sizes
 Snapsbrew.templates.create(title: "Launch card", size: "open_graph")
 Snapsbrew.templates.update(id, title: "Launch card", width: 1080, height: 1080)
 Snapsbrew.templates.publish(id)
+Snapsbrew.templates.preview(id, variants: { title: "Hello" })   # Watermarked HTML
+Snapsbrew.templates.set_tags(id, [ 1, 2 ])                       # Replaces all tags
 Snapsbrew.templates.destroy(id)
 ```
 
@@ -194,6 +196,8 @@ Snapsbrew.templates.update(id, title: "Launch card", groups: [])
 ```
 
 `templates.update` changes only the fields that you give. It cannot change a template that uses the v2 editor document. It raises a `ConflictError` with the code `legacy_edit_rejected_for_v2`. Use [editor documents](#editor-documents) for these templates.
+
+`templates.set_tags` replaces all the tags of the template. To remove all tags, give an empty list.
 
 `templates.destroy` also removes the snaps, images, versions and forms of the template.
 
@@ -264,8 +268,9 @@ Snapsbrew.media.list(page: 2).meta.total  # The page fields of the Laravel pagin
 
 Snapsbrew.tags.list(search: "launch")
 Snapsbrew.tags.create(name: "Launch")
-Snapsbrew.tags.sync(template: id, tag_ids: [ 1, 2 ])
 ```
+
+To set the tags of a template, use `templates.set_tags`.
 
 The `width` and `height` of a screenshot are 1 to 4000 pixels. The default viewport is 1330 x 780.
 
@@ -343,14 +348,14 @@ Verify webhooks on the server only. Never put the webhook secret in browser code
 class SnapsbrewWebhooksController < ActionController::API
   def create
     event = Snapsbrew::Webhook.verify(request.raw_post, request.headers)
-    return head(:ok) if WebhookDelivery.exists?(delivery_id: event.delivery_id)
+    return head(:ok) if event.delivery_id && WebhookDelivery.exists?(delivery_id: event.delivery_id)
 
     case event.event
     when "snap.completed" then Cover.attach(event.snap.id, event.snap.media_url)
     when "snap.failed"    then Cover.fail(event.snap.id, event.snap.last_error)
     end
 
-    WebhookDelivery.create!(delivery_id: event.delivery_id)
+    WebhookDelivery.create!(delivery_id: event.delivery_id) if event.delivery_id
     head :ok
   rescue Snapsbrew::WebhookVerificationError
     head :bad_request
@@ -362,8 +367,19 @@ end
 - `headers` can be the Rails `request.headers`, a Rack env, or a Hash.
 - The secret comes from `config.webhook_secret`. To give it directly, pass `secret: "whsec_..."`.
 - The timestamp must be 300 seconds or less before or after the current time. To change this limit, pass `tolerance: 600`.
-- Each problem raises `Snapsbrew::WebhookVerificationError`. Its `reason` is `:signature` or `:timestamp`.
+- The header names are not case-sensitive. The signature can be lowercase or uppercase hex.
 - `event.delivery_id` is the `X-Snapsbrew-Delivery` header. All attempts of one delivery have the same value. Use it to ignore a duplicate.
+- An older instance sends no `X-Snapsbrew-Delivery` header. Then the verification passes, and `event.delivery_id` is `nil`.
+
+Each problem raises `Snapsbrew::WebhookVerificationError`. Its `reason` tells why:
+
+| `reason`     | Cause |
+|--------------|-------|
+| `:signature` | The signature header is missing, or the signature does not match the body. |
+| `:timestamp` | The timestamp header is missing, is not Unix seconds, or is outside the tolerance. |
+| `:payload`   | The signature is valid, but the body is not a JSON object. |
+
+The JS, PHP and Python SDKs use the same three reasons.
 
 The events are in `Snapsbrew::Webhook::EVENTS`:
 
@@ -497,17 +513,25 @@ end
 
 ## Retries
 
-The client retries a failed request up to `max_retries` times:
+The client retries a failed request up to `max_retries` times. The default is 2. The JS, PHP and Python SDKs use the same rules:
 
-- It retries a 429 for each request. It waits for the seconds in `Retry-After`. If `Retry-After` is more than 60 seconds, it does not retry.
-- It retries a 5xx for an idempotent request only.
-- It retries a 409 with the code `idempotency_key_in_progress` for a request with an `idempotency_key`. It does not retry the other 409 codes.
+- It retries a 429 for each request. A 429 means that the server did not do the request.
 - It retries a connection error that occurs before the request reaches the server, for each request.
-- It retries a connection error that can occur after the server received the request, for example a read timeout, for an idempotent request only.
+- It retries a 5xx, a read timeout, or a connection error after the server received the request, for an idempotent request only.
+- It retries a 409 with the code `idempotency_key_in_progress` for a request with an `idempotency_key`. It does not retry the other 409 codes.
+- It never retries `documents.replace` or `documents.apply` after a 5xx or a timeout. A repeat gets a 409, because the first write changed the revision.
 
-Between two attempts, the client waits with exponential backoff and jitter. The wait is about 0.5, 1, 2 and 4 seconds, to a maximum of 8 seconds.
+Between two attempts, the client waits with exponential backoff and equal jitter. The wait is 0.5, 1, 2 and 4 seconds, to a maximum of 8 seconds. Half of each wait is random. If the response has `Retry-After`, the client waits that time. If `Retry-After` is more than 60 seconds, it does not retry.
 
-These requests are idempotent: each `GET`, `templates.publish`, `batches.cancel`, `tags.sync`, and `snaps.create` or `batches.create` with an `idempotency_key`. To make a snap safe to retry, give an `idempotency_key`:
+These requests are idempotent:
+
+- Each `GET` and `DELETE`, for example `templates.destroy`. After a lost response, a retried `templates.destroy` raises a `NotFoundError`, because the first request removed the template.
+- `templates.publish`, `templates.set_tags` and `batches.cancel`.
+- `snaps.create` and `batches.create` with an `idempotency_key`.
+
+The other requests are not idempotent: `templates.create`, `templates.update`, `snaps.create` and `batches.create` with no key, `screenshots.create`, `media.upload`, `tags.create` and `forms.submit`.
+
+To make a snap safe to retry, give an `idempotency_key`:
 
 ```ruby
 Snapsbrew.snaps.create(template: id, variants: { title: "Hello" }, idempotency_key: "order-1234")
@@ -532,3 +556,7 @@ The integration tests run only when `SNAPSBREW_TEST_URL` and `SNAPSBREW_TEST_TOK
 To test with a different Rails version, set `RAILS_VERSION`, for example `RAILS_VERSION="~> 7.2.0" bundle update rails`.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before you open a pull request.
+
+## License
+
+The gem is available under the [MIT License](LICENSE).

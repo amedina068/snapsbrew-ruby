@@ -12,6 +12,10 @@ module Snapsbrew
     # The server possibly received the request.
     AFTER_SEND = [ Net::ReadTimeout, Net::WriteTimeout, Errno::ECONNRESET, Errno::EPIPE, Errno::ETIMEDOUT, EOFError ].freeze
 
+    # A repeat of these methods has no second effect. A POST or a PATCH is
+    # idempotent only when its resource says so.
+    IDEMPOTENT_METHODS = %i[ get head put delete ].freeze
+
     BASE_DELAY = 0.5
     MAX_DELAY = 8
     MAX_RETRY_AFTER = 60
@@ -53,7 +57,7 @@ module Snapsbrew
     # the request is idempotent. Retries a 409 with the code
     # idempotency_key_in_progress for an idempotent request. Only a request
     # with an idempotency key gets this code.
-    def request(method, path, query: nil, json: nil, form: nil, idempotent: method == :get)
+    def request(method, path, query: nil, json: nil, form: nil, idempotent: IDEMPOTENT_METHODS.include?(method))
       attempt = 0
 
       begin

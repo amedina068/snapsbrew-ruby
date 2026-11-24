@@ -52,7 +52,8 @@ class Snapsbrew::ErrorsTest < Snapsbrew::TestCase
     media_list: ->(client) { client.media.list },
     tags_list: ->(client) { client.tags.list },
     tags_create: ->(client) { client.tags.create(name: "Launch") },
-    tags_sync: ->(client) { client.tags.sync(template: "t1", tag_ids: [ 1 ]) }
+    templates_set_tags: ->(client) { client.templates.set_tags("t1", [ 1 ]) },
+    templates_preview: ->(client) { client.templates.preview("t1") }
   }.each do |operation, call|
     define_method("test_a_token_without_the_ability_is_an_authorization_error_on_#{operation}") do
       stub = stub_request(:any, /\A#{URL}/).to_return(json({ message: "Invalid ability provided." }, status: 403))

@@ -39,6 +39,7 @@ module Snapsbrew
   class Client
     BEFORE_SEND: Array[singleton(Exception)]
     AFTER_SEND: Array[singleton(Exception)]
+    IDEMPOTENT_METHODS: Array[Symbol]
     BASE_DELAY: Float
     MAX_DELAY: Integer
     MAX_RETRY_AFTER: Integer
@@ -134,6 +135,8 @@ module Snapsbrew
                  ?groups: Array[group]?) -> Record
     def destroy: (String uuid) -> true
     def publish: (String uuid) -> Record
+    def preview: (String uuid, ?variants: variants?) -> String
+    def set_tags: (String uuid, Array[Integer | String] tag_ids) -> Array[Record]
   end
 
   class Snaps < Resource
@@ -182,7 +185,6 @@ module Snapsbrew
   class Tags < Resource
     def list: (?search: String?) -> Array[Record]
     def create: (name: String) -> Record
-    def sync: (template: String, tag_ids: Array[Integer | String]) -> Array[Record]
   end
 
   class Error < StandardError
@@ -238,9 +240,9 @@ module Snapsbrew
   end
 
   class WebhookVerificationError < Error
-    attr_reader reason: :signature | :timestamp
+    attr_reader reason: :signature | :timestamp | :payload
 
-    def initialize: (:signature | :timestamp reason, String message) -> void
+    def initialize: (:signature | :timestamp | :payload reason, String message) -> void
   end
 
   module Webhook

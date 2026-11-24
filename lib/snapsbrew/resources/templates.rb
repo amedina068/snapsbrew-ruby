@@ -34,6 +34,16 @@ module Snapsbrew
       Record.wrap(post("/v1/templates/#{escape(uuid)}/publish", idempotent: true)["data"])
     end
 
+    # Returns the watermarked HTML preview of the template. It stores no snap.
+    def preview(uuid, variants: nil)
+      get("/v1/templates/#{escape(uuid)}/preview", query: { variants: Variants.normalize(variants) }.compact)
+    end
+
+    # Replaces every tag of a template. Give an empty list to remove all tags.
+    def set_tags(uuid, tag_ids)
+      Record.wrap(post("/v1/templates/#{escape(uuid)}/tags", json: { tag_ids: }, idempotent: true)["tags"])
+    end
+
     private
       # A layer with no override returns available_modifications as [], the PHP
       # form of an empty map. Read it as an empty map, the same type as the other layers.

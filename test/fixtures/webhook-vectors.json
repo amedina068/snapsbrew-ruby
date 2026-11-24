@@ -14,7 +14,8 @@
                 "X-Snapsbrew-Timestamp": "1767225600",
                 "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
             },
-            "signed_string": "1767225600.{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}"
+            "signed_string": "1767225600.{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "delivery_id": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
         },
         {
             "name": "snap.failed",
@@ -25,7 +26,8 @@
                 "X-Snapsbrew-Timestamp": "1767225600",
                 "X-Snapsbrew-Signature": "7a9fc5e2ceb214b643b966e9343ab8ee64f772bd84932d1b678314df36bcef17"
             },
-            "signed_string": "1767225600.{\"event\":\"snap.failed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"failed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":\"render_failed\",\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}"
+            "signed_string": "1767225600.{\"event\":\"snap.failed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"failed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":\"render_failed\",\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "delivery_id": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
         },
         {
             "name": "snap-import.completed",
@@ -36,11 +38,56 @@
                 "X-Snapsbrew-Timestamp": "1767225600",
                 "X-Snapsbrew-Signature": "1b1fc565d06f08c236d28af934f668d008b098cee5ba3c6a720bdde6f3b2f6b1"
             },
-            "signed_string": "1767225600.{\"event\":\"snap-import.completed\",\"import\":{\"uuid\":\"7c1f2a9e-0b44-4a1e-9f2b-5d3c8e1a7b60\",\"title\":\"October launch\",\"status\":\"completed\",\"total_rows\":2,\"processed_rows\":2,\"completed\":2,\"pending\":0,\"failed\":0,\"canceled\":0},\"template\":{\"uuid\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"title\":\"Launch card\"}}"
+            "signed_string": "1767225600.{\"event\":\"snap-import.completed\",\"import\":{\"uuid\":\"7c1f2a9e-0b44-4a1e-9f2b-5d3c8e1a7b60\",\"title\":\"October launch\",\"status\":\"completed\",\"total_rows\":2,\"processed_rows\":2,\"completed\":2,\"pending\":0,\"failed\":0,\"canceled\":0},\"template\":{\"uuid\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"title\":\"Launch card\"}}",
+            "delivery_id": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
+        },
+        {
+            "name": "no delivery header",
+            "valid": true,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            },
+            "delivery_id": null
+        },
+        {
+            "name": "empty delivery header",
+            "valid": true,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "",
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            },
+            "delivery_id": null
+        },
+        {
+            "name": "uppercase signature",
+            "valid": true,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Signature": "1732257DF61E5ACB35E9090924DC4A3F80542DF31C1078C2419F6CA83471A385",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600"
+            },
+            "delivery_id": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
+        },
+        {
+            "name": "timestamp at the tolerance limit",
+            "valid": true,
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Timestamp": "1767225300",
+                "X-Snapsbrew-Signature": "3281060d58e88c6d943a86f05cca3ccf802aa592ad7f33906b3ab0471e810ecf",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
+            },
+            "delivery_id": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
         },
         {
             "name": "body changed after signing",
             "valid": false,
+            "reason": "signature",
             "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
             "headers": {
                 "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
@@ -51,6 +98,7 @@
         {
             "name": "timestamp changed after signing",
             "valid": false,
+            "reason": "signature",
             "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
             "headers": {
                 "X-Snapsbrew-Timestamp": "1767225601",
@@ -61,6 +109,7 @@
         {
             "name": "signed with another secret",
             "valid": false,
+            "reason": "signature",
             "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
             "headers": {
                 "X-Snapsbrew-Signature": "9c583b75af5af0b48f30f3dbe05dbea7740975be0cd0438dfea42650ba265959",
@@ -71,11 +120,87 @@
         {
             "name": "body decoded and encoded again",
             "valid": false,
+            "reason": "signature",
             "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https://snapsbrew.example/storage/snaps/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https://example.com/hooks/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"¿Launch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
             "headers": {
                 "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
                 "X-Snapsbrew-Timestamp": "1767225600",
                 "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            }
+        },
+        {
+            "name": "signature header missing",
+            "valid": false,
+            "reason": "signature",
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600"
+            }
+        },
+        {
+            "name": "signature is not hex",
+            "valid": false,
+            "reason": "signature",
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Signature": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Timestamp": "1767225600"
+            }
+        },
+        {
+            "name": "timestamp header missing",
+            "valid": false,
+            "reason": "timestamp",
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b",
+                "X-Snapsbrew-Signature": "1732257df61e5acb35e9090924dc4a3f80542df31c1078c2419f6ca83471a385"
+            }
+        },
+        {
+            "name": "timestamp is not a number",
+            "valid": false,
+            "reason": "timestamp",
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Timestamp": "1767225600.5",
+                "X-Snapsbrew-Signature": "977c69abc3cf240863aceb38a846136944c8fb513247bc4d3bbce0c787c6b11d",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
+            }
+        },
+        {
+            "name": "timestamp outside the tolerance",
+            "valid": false,
+            "reason": "timestamp",
+            "body": "{\"event\":\"snap.completed\",\"snap\":{\"id\":\"9f1c2d3e\",\"media_url\":\"https:\\/\\/snapsbrew.example\\/storage\\/snaps\\/9f1c2d3e.png\",\"width\":1200,\"height\":630,\"type\":\"image\",\"status\":\"completed\",\"is_async\":true,\"webhook_url\":\"https:\\/\\/example.com\\/hooks\\/snap\",\"completed_at\":\"2026-05-01T12:00:03Z\",\"last_error\":null,\"variants\":[],\"template_id\":\"141e8454-8aa1-420a-bd0b-18a85ba949a2\",\"template_title\":\"\\u00bfLaunch card?\",\"created_at\":\"2026-05-01T12:00:00Z\"}}",
+            "headers": {
+                "X-Snapsbrew-Timestamp": "1767225299",
+                "X-Snapsbrew-Signature": "2ea914fa73c162ca60623ebaef4af4eb3970e801c1e20b501800d430be05a6bb",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
+            }
+        },
+        {
+            "name": "body is not JSON",
+            "valid": false,
+            "reason": "payload",
+            "body": "not json",
+            "headers": {
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "1a7f9033d07e700425a2416ea9dfec43a28a3401c2b05fffbc9c948c948e3616",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
+            }
+        },
+        {
+            "name": "body is a JSON array",
+            "valid": false,
+            "reason": "payload",
+            "body": "[]",
+            "headers": {
+                "X-Snapsbrew-Timestamp": "1767225600",
+                "X-Snapsbrew-Signature": "7bb77b6769eef68d03b971abf233dc5b53431c53980dbd989bb0bec863e8be78",
+                "X-Snapsbrew-Delivery": "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b"
             }
         }
     ]

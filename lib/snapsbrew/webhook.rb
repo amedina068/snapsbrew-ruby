@@ -1,5 +1,5 @@
 module Snapsbrew
-  # The webhook delivery is not valid. reason is :signature or :timestamp.
+  # The webhook delivery is not valid. reason is :signature, :timestamp or :payload.
   class WebhookVerificationError < Error
     attr_reader :reason
 
@@ -40,25 +40,33 @@ module Snapsbrew
       end
     end
 
-    # Returns the decoded event. Raises WebhookVerificationError when the
-    # signature does not match or the timestamp is too old or too new.
+    # Returns the decoded event. Raises WebhookVerificationError with a reason:
     #
-    # headers can be the Rails request.headers, a Rack env or a Hash.
+    # - :signature when the signature is missing or does not match the body.
+    # - :timestamp when the timestamp is missing, is not Unix seconds, or is
+    #   more than tolerance seconds from now.
+    # - :payload when the signature is valid, but the body is not a JSON object.
+    #
+    # headers can be the Rails request.headers, a Rack env or a Hash. An older
+    # instance sends no delivery header. Then delivery_id is nil.
     def self.verify(body, headers, secret: Snapsbrew.config.webhook_secret, tolerance: TOLERANCE, now: Time.now)
       raise ConfigurationError, "Set the Snapsbrew webhook_secret to verify a webhook" if secret.to_s.empty?
 
-      timestamp = header(headers, TIMESTAMP).to_s
-      signature = header(headers, SIGNATURE).to_s
+      signature = header(headers, SIGNATURE)
+      timestamp = header(headers, TIMESTAMP)
 
-      unless OpenSSL.secure_compare(sign(timestamp, body, secret), signature)
-        raise WebhookVerificationError.new(:signature, "The webhook signature does not match the body")
+      refuse :signature, "The #{SIGNATURE} header is missing" unless signature
+      refuse :timestamp, "The #{TIMESTAMP} header is missing or is not Unix seconds" unless timestamp&.match?(/\A[0-9]+\z/)
+
+      unless OpenSSL.secure_compare(sign(timestamp, body, secret), signature.downcase)
+        refuse :signature, "The webhook signature does not match the body"
       end
 
-      unless timestamp.match?(/\A\d+\z/) && (now.to_i - timestamp.to_i).abs <= tolerance
-        raise WebhookVerificationError.new(:timestamp, "The webhook timestamp is more than #{tolerance} seconds from now")
+      if (now.to_i - timestamp.to_i).abs > tolerance
+        refuse :timestamp, "The webhook timestamp is more than #{tolerance} seconds from now"
       end
 
-      Event.new(JSON.parse(body), delivery_id: header(headers, DELIVERY))
+      Event.new(payload(body), delivery_id: header(headers, DELIVERY))
     end
 
     # The X-Snapsbrew-Signature value for a timestamp and a raw body.
@@ -67,9 +75,25 @@ module Snapsbrew
     end
 
     # Rails and Hash headers use the header name. A Rack env uses HTTP_X_SNAPSBREW_SIGNATURE.
+    # An empty value counts as a missing header.
     def self.header(headers, name)
-      headers[name] || headers[name.downcase] || headers["HTTP_#{name.upcase.tr("-", "_")}"]
+      value = headers[name] || headers[name.downcase] || headers["HTTP_#{name.upcase.tr("-", "_")}"]
+      value ||= headers.find { |key, _| key.to_s.casecmp?(name) }&.last if headers.is_a?(Hash)
+      value = Array(value).first.to_s.strip
+
+      value unless value.empty?
     end
-    private_class_method :header
+
+    def self.payload(body)
+      payload = JSON.parse(body)
+      payload.is_a?(Hash) ? payload : refuse(:payload, "The webhook body is not a JSON object")
+    rescue JSON::ParserError
+      refuse :payload, "The webhook body is not JSON"
+    end
+
+    def self.refuse(reason, message)
+      raise WebhookVerificationError.new(reason, message)
+    end
+    private_class_method :header, :payload, :refuse
   end
 end

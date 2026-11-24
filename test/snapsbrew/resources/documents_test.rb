@@ -38,6 +38,13 @@ class Snapsbrew::DocumentsTest < Snapsbrew::TestCase
     assert_requested stub, times: 1
   end
 
+  def test_replace_is_not_retried_after_a_read_timeout
+    stub = stub_api(:put, "/v1/templates/#{ID}/document").to_raise(Net::ReadTimeout)
+
+    assert_raises(Snapsbrew::ConnectionError) { client.documents.replace(ID, revision: 4, document: { layers: [] }) }
+    assert_requested stub, times: 1
+  end
+
   def test_replace_conflict_carries_the_current_document
     stub = stub_api(:put, PATH).to_return(json({ code: "editor_document_conflict", current_revision: 6, current_document: DOCUMENT }, status: 409))
 

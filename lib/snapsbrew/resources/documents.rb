@@ -14,8 +14,10 @@ module Snapsbrew
     def find(uuid) = Record.wrap(get(document_path(uuid)))
 
     # Replaces the whole document. A layer or a property that you leave out is removed.
+    # A repeat after a lost response gets a 409, because the first write
+    # changed the revision. So the SDK never retries it after a 5xx.
     def replace(uuid, revision:, document:)
-      Record.wrap(put(document_path(uuid), json: { revision:, document: }))
+      Record.wrap(put(document_path(uuid), json: { revision:, document: }, idempotent: false))
     end
 
     # Applies 1 to 100 operations: set_layer_property and set_layer_type. They apply together, or none applies.

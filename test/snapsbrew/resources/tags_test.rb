@@ -12,12 +12,4 @@ class Snapsbrew::TagsTest < Snapsbrew::TestCase
 
     assert_equal "launch", client.tags.create(name: "Launch").slug
   end
-
-  def test_sync
-    stub = stub_api(:post, "/v1/templates/t1/tags").with(body: { tag_ids: [ 1 ] })
-      .to_return(json(message: "Tags updated successfully.", tags: [ { id: 1, name: "Launch" } ]))
-
-    assert_equal [ 1 ], client.tags.sync(template: "t1", tag_ids: [ 1 ]).map(&:id)
-    assert_requested stub
-  end
 end

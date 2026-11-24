@@ -12,9 +12,10 @@ class Snapsbrew::WebhookTest < Snapsbrew::TestCase
         event = verify.call
 
         assert_equal JSON.parse(vector["body"]), event.to_h
-        assert_equal vector["headers"]["X-Snapsbrew-Delivery"], event.delivery_id
+        vector["delivery_id"] ? assert_equal(vector["delivery_id"], event.delivery_id) : assert_nil(event.delivery_id)
       else
-        assert_raises(Snapsbrew::WebhookVerificationError) { verify.call }
+        error = assert_raises(Snapsbrew::WebhookVerificationError) { verify.call }
+        assert_equal vector["reason"].to_sym, error.reason
       end
     end
   end
@@ -100,6 +101,22 @@ class Snapsbrew::WebhookTest < Snapsbrew::TestCase
     error = assert_raises(Snapsbrew::WebhookVerificationError) { Snapsbrew::Webhook.verify("{}", {}, secret: SECRET) }
 
     assert_equal :signature, error.reason
+  end
+
+  def test_reads_mixed_case_headers_and_lists
+    body, headers = delivery("snap.completed")
+    headers = headers.to_h { |name, value| [ name.swapcase, [ value ] ] }
+
+    assert_equal "3f2b6c1e-8a4d-4e5f-9b0a-1c2d3e4f5a6b", verify([ body, headers ]).delivery_id
+  end
+
+  def test_invalid_json_after_a_valid_signature_fails_on_the_payload
+    body, headers = delivery("snap.completed")
+    body = "{"
+    headers["X-Snapsbrew-Signature"] = Snapsbrew::Webhook.sign(headers["X-Snapsbrew-Timestamp"], body, SECRET)
+
+    error = assert_raises(Snapsbrew::WebhookVerificationError) { verify([ body, headers ]) }
+    assert_equal :payload, error.reason
   end
 
   def test_a_timestamp_that_is_not_a_number_fails_on_the_timestamp

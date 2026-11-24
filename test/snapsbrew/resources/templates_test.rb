@@ -130,6 +130,53 @@ class Snapsbrew::TemplatesTest < Snapsbrew::TestCase
     assert_requested stub
   end
 
+  def test_destroy_is_retried_after_a_server_error
+    stub = stub_api(:delete, "/v1/templates/#{ID}").to_return(json({}, status: 503))
+      .then.to_return(json(message: "Template deleted successfully"))
+
+    assert client.templates.destroy(ID)
+    assert_requested stub, times: 2
+  end
+
+  def test_destroy_is_retried_after_a_read_timeout
+    stub = stub_api(:delete, "/v1/templates/#{ID}").to_raise(Net::ReadTimeout)
+      .then.to_return(json(message: "Template deleted successfully"))
+
+    assert client.templates.destroy(ID)
+    assert_requested stub, times: 2
+  end
+
+  def test_update_is_not_retried_after_a_server_error
+    stub = stub_api(:patch, "/v1/templates/#{ID}").to_return(json({}, status: 500))
+
+    assert_raises(Snapsbrew::ServerError) { client.templates.update(ID, title: "Card") }
+    assert_requested stub, times: 1
+  end
+
+  def test_preview_sends_the_variants
+    stub = stub_request(:get, "#{URL}/api/v1/templates/#{ID}/preview?variants[0][layer]=title&variants[0][text]=Hello")
+      .to_return(status: 200, body: "<!DOCTYPE html>", headers: { "Content-Type" => "text/html; charset=UTF-8" })
+
+    assert_equal "<!DOCTYPE html>", client.templates.preview(ID, variants: { title: "Hello" })
+    assert_requested stub
+  end
+
+  def test_set_tags
+    stub = stub_api(:post, "/v1/templates/#{ID}/tags").with(body: { tag_ids: [ 1 ] })
+      .to_return(json(message: "Tags updated successfully.", tags: [ { id: 1, name: "Launch" } ]))
+
+    assert_equal [ 1 ], client.templates.set_tags(ID, [ 1 ]).map(&:id)
+    assert_requested stub
+  end
+
+  def test_set_tags_is_retried_because_it_is_idempotent
+    stub = stub_api(:post, "/v1/templates/#{ID}/tags").to_return(json({}, status: 502))
+      .then.to_return(json(tags: []))
+
+    assert_equal [], client.templates.set_tags(ID, [])
+    assert_requested stub, times: 2
+  end
+
   def test_publish_is_retried_because_it_is_idempotent
     stub = stub_api(:post, "/v1/templates/#{ID}/publish").to_return(json({}, status: 502))
       .then.to_return(json(data: { uuid: ID, published_version: 3 }))

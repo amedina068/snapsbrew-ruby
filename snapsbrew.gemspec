@@ -8,6 +8,7 @@ Gem::Specification.new do |spec|
   spec.description = "Render snaps from Snapsbrew templates, build signed image URLs, " \
                      "and show them in Rails views. The gem uses the Ruby standard library only."
   spec.homepage    = "https://github.com/amedina068/snapsbrew-ruby"
+  spec.license     = "MIT"
 
   spec.required_ruby_version = ">= 3.2"
 
@@ -17,6 +18,6 @@ Gem::Specification.new do |spec|
     "rubygems_mfa_required" => "true"
   }
 
-  spec.files = Dir["lib/**/*", "sig/**/*", "README.md", "CHANGELOG.md"]
+  spec.files = Dir["lib/**/*", "sig/**/*", "README.md", "CHANGELOG.md", "LICENSE"]
   spec.require_paths = [ "lib" ]
 end
