@@ -2,4 +2,10 @@ blank_issues_enabled: false
 contact_links:
   - name: Report a security problem
     url: https://github.com/amedina068/snapsbrew-ruby/security/advisories/new
-    about: Report security problems in private. Do not open a public issue.
+    about: Report a security problem in private. Do not open a public issue.
+  - name: Report a problem with the Snapsbrew app
+    url: https://github.com/amedina068/snapsbrew/issues
+    about: This repository is for the Ruby SDK only. Report problems with the app in the app repository.
+  - name: Read the documentation
+    url: https://snapsbrew.com/docs/sdks/overview
+    about: The guides for the app and for each SDK.
