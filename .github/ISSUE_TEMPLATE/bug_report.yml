@@ -1,0 +1,62 @@
+name: Bug report
+description: Tell us about a problem in the gem.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not put a token, a signing key or another secret in this issue.
+        To report a security problem, read SECURITY.md. Do not use this form.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Write what the gem did.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: Write what the gem must do.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to see the problem
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    id: gem-version
+    attributes:
+      label: Gem version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: ruby-version
+    attributes:
+      label: Ruby version
+      placeholder: "3.4"
+    validations:
+      required: true
+  - type: input
+    id: rails-version
+    attributes:
+      label: Rails version
+      description: If you use Rails.
+  - type: input
+    id: instance-version
+    attributes:
+      label: Snapsbrew instance version
+      description: If you know it.
+  - type: input
+    id: request-id
+    attributes:
+      label: Request ID
+      description: If the API returned an error, give the `request_id` of the error.

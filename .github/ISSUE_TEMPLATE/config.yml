@@ -3,9 +3,12 @@ contact_links:
   - name: Report a security problem
     url: https://github.com/amedina068/snapsbrew-ruby/security/advisories/new
     about: Report a security problem in private. Do not open a public issue.
-  - name: Report a problem with the Snapsbrew app
-    url: https://github.com/amedina068/snapsbrew/issues
-    about: This repository is for the Ruby SDK only. Report problems with the app in the app repository.
-  - name: Read the documentation
+  - name: Question
+    url: https://github.com/amedina068/snapsbrew/discussions/categories/q-a
+    about: Ask a question in the Q&A category of the Discussions of the app repository. Do not open an issue for a question.
+  - name: Documentation
     url: https://snapsbrew.com/docs/sdks/overview
     about: The guides for the app and for each SDK.
+  - name: Bug in the Snapsbrew server
+    url: https://github.com/amedina068/snapsbrew/issues
+    about: This repository is for the Ruby SDK only. Report a bug in the app or in the API server in the app repository.
