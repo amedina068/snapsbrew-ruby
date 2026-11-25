@@ -4,7 +4,9 @@ All notable changes to this project are in this file.
 
 The format is [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] - Unreleased
+## [Unreleased]
+
+## [0.2.0] - 2026-11-25
 
 The gem adopts the OpenAPI spec of the app at `docs/api/openapi.yaml` (app PRs 93 and 95).
 
@@ -52,7 +54,9 @@ The gem adopts the OpenAPI spec of the app at `docs/api/openapi.yaml` (app PRs 9
 - The README links to the SDK overview at <https://snapsbrew.com/docs/sdks/overview>.
 - The install generator shows `webhook_secret` in the credentials example.
 
-## [0.1.0] - Unreleased
+## [0.1.0] - Not published
+
+Version 0.1.0 was not published. Release 0.2.0 contains these changes.
 
 ### Added
 
