@@ -9,3 +9,7 @@ gemfiles/*.lock
 .env
 .env.*
 *.key
+
+# Internal notes of the maintainer
+BRIEF.md
+REPORT-*.md

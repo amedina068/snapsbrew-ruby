@@ -1,5 +1,8 @@
 # Snapsbrew for Ruby
 
+[![CI](https://github.com/amedina068/snapsbrew-ruby/actions/workflows/ci.yml/badge.svg)](https://github.com/amedina068/snapsbrew-ruby/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A Ruby client for the Snapsbrew image API, with a Rails integration.
 
 Snapsbrew renders images ("snaps") from templates. You run your own Snapsbrew instance, so each client talks to the instance URL that you give it. The gem uses the Ruby standard library only. It has no runtime dependencies and sends no telemetry.
@@ -21,7 +24,7 @@ gem "snapsbrew", github: "amedina068/snapsbrew-ruby"
 
 Then run `bundle install`.
 
-The gem is not on RubyGems yet. Bundler installs it from the `main` branch of the Git repository. The repository is private, so Git must have access to GitHub, for example through `gh auth setup-git`.
+The gem is not on RubyGems yet. Bundler installs it from the `main` branch of the Git repository.
 
 ## Quick start
 
@@ -557,6 +560,22 @@ To test with a different Rails version, set `RAILS_VERSION`, for example `RAILS_
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before you open a pull request.
 
+## Related projects
+
+- [Snapsbrew](https://github.com/amedina068/snapsbrew): the self-hosted app that this SDK calls. It uses the AGPL-3.0.
+- [Documentation](https://snapsbrew.com/docs): the guides for the app and the SDKs. The source is in [snapsbrew-docs](https://github.com/amedina068/snapsbrew-docs).
+- [SDK overview](https://snapsbrew.com/docs/sdks/overview): the install steps and the features of each SDK.
+- SDKs for other languages: [TypeScript](https://github.com/amedina068/snapsbrew-js), [PHP](https://github.com/amedina068/snapsbrew-php), [Python](https://github.com/amedina068/snapsbrew-python).
+
+## Community
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to set up the code and open a pull request.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): the rules for issues, pull requests, and reviews.
+- [SECURITY.md](SECURITY.md): how to report a security problem in private.
+- [CHANGELOG.md](CHANGELOG.md): the changes in each version.
+
+Report a problem with the SDK in the issues of this repository. Report a problem with the app in the [Snapsbrew issues](https://github.com/amedina068/snapsbrew/issues).
+
 ## License
 
-The gem is available under the [MIT License](LICENSE).
+This SDK is available under the [MIT License](LICENSE). You can use it in closed source code. The Snapsbrew app uses the AGPL-3.0. That license does not cover this SDK.
