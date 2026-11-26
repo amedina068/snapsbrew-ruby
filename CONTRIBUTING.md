@@ -66,6 +66,24 @@ Start the title with a type: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`,
 - `fix(rails): read the instance URL from the credentials`
 - `docs: add a webhook example to the README`
 
+## Release
+
+The `Release` workflow (`.github/workflows/release.yml`) builds the gem and publishes it to RubyGems with trusted publishing (OIDC). The `build` job runs the checks and builds the gem. The `publish` job runs in the `rubygems` environment and gets a short-lived API key from RubyGems. The repository has no RubyGems secret. The `rubygems` environment accepts only the `main` branch and the `v*` tags.
+
+1. Set the new version in `lib/snapsbrew/version.rb`.
+2. In `CHANGELOG.md`, move the lines under `Unreleased` to a new section `## [<version>] - <date>`.
+3. Open a pull request with these changes. Merge it.
+4. Start the workflow: `gh workflow run release.yml --ref main`.
+5. Create the GitHub release `v<version>`. Use the section of `CHANGELOG.md` as the notes.
+
+### First release
+
+RubyGems creates the gem at the first publish. Before the first release, do these steps:
+
+1. Add a pending trusted publisher at <https://rubygems.org/profile/oidc/pending_trusted_publishers>: gem `snapsbrew`, owner `amedina068`, repository `snapsbrew-ruby`, workflow `release.yml`, environment `rubygems`.
+2. Copy the ID of the RubyGems account from the same page.
+3. Start the first run with this ID: `gh workflow run release.yml --ref main -f rubygems-owner=<ID>`.
+
 ## Triage
 
 Each new issue gets the `needs-triage` label. The maintainer reads the issue and replaces `needs-triage` with a type label, for example `bug`, `enhancement`, `documentation` or `question`.

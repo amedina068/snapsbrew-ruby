@@ -1,9 +1,21 @@
 name: Release
 
-# This workflow runs only by hand. It builds the gem and keeps it as an
-# artifact. It does not publish the gem.
+# Builds the gem and publishes it to RubyGems with trusted publishing (OIDC).
+# The publish job gets a short-lived API key from RubyGems. The repository
+# has no RubyGems secret. This workflow runs only by hand.
+#
+# Before the first release, add a pending trusted publisher on RubyGems:
+# gem snapsbrew, owner amedina068, repository snapsbrew-ruby, workflow
+# release.yml, environment rubygems. For the first release only, set the
+# input "rubygems-owner" to the ID of the RubyGems account. The "Pending
+# trusted publishers" page of RubyGems shows this ID.
 on:
   workflow_dispatch:
+    inputs:
+      rubygems-owner:
+        description: The ID of the RubyGems account. Set it only for the first release of the gem.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -24,8 +36,23 @@ jobs:
           name: snapsbrew-gem
           path: "*.gem"
 
-      # To publish later, add the repository secret RUBYGEMS_API_KEY and enable this step.
-      # - name: Publish to RubyGems
-      #   run: gem push *.gem
-      #   env:
-      #     GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: rubygems
+    permissions:
+      id-token: write # trusted publishing
+    steps:
+      - name: Get the built gem
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: snapsbrew-gem
+      - uses: ruby/setup-ruby@78c62f2208e480ce3d5ae4dfd9b9e181acf48b63 # v1.344.0
+        with:
+          ruby-version: "3.4"
+      - name: Get a short-lived RubyGems API key
+        uses: rubygems/configure-rubygems-credentials@c6ca7f4bac0e29c9bde8eeae0a0a986b27efa05f # v2.2.0
+        with:
+          owner: ${{ inputs.rubygems-owner }}
+      - name: Publish to RubyGems
+        run: gem push ./*.gem
