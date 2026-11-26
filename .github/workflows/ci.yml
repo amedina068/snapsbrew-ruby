@@ -20,8 +20,8 @@ jobs:
     env:
       RAILS_VERSION: "~> ${{ matrix.rails }}.0"
     steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ruby/setup-ruby@78c62f2208e480ce3d5ae4dfd9b9e181acf48b63 # v1.344.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -33,8 +33,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: ruby/setup-ruby@78c62f2208e480ce3d5ae4dfd9b9e181acf48b63 # v1.344.0
         with:
           ruby-version: "3.4"
           bundler-cache: true

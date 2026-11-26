@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/amedina068/snapsbrew-ruby/actions/workflows/ci.yml/badge.svg)](https://github.com/amedina068/snapsbrew-ruby/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amedina068/snapsbrew-ruby/badge)](https://scorecard.dev/viewer/?uri=github.com/amedina068/snapsbrew-ruby)
 
 A Ruby client for the Snapsbrew image API, with a Rails integration.
 
